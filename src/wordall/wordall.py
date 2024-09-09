@@ -82,7 +82,7 @@ class WordleGame(Game):
         Chooses a target word, which the user must try to guess, randomly from the word
         list.
         """
-        self.target = random.choice(self.word_list)
+        return random.choice(self.word_list)
 
     def guess_word(self, guess_word: str) -> bool:
         if self.game_state != GameState.GUESSING:
