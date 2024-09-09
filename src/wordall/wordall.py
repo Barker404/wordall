@@ -71,9 +71,12 @@ class WordleGame(Game):
         with open(word_list_path) as word_list_file:
             word_list = [w.strip() for w in word_list_file.readlines()]
 
+        if not word_list:
+            raise InvalidWordListError("Empty word list")
+
         invalid = [w for w in word_list if not self.is_word_in_alphabet(w)]
         if invalid:
-            raise InvalidWordListWordError(invalid)
+            raise InvalidWordListError(f"Invalid words: {invalid}")
 
         return word_list
 
@@ -89,7 +92,7 @@ class WordleGame(Game):
             raise GameAlreadyFinishedError()
 
         if not self.is_word_in_alphabet:
-            raise InvalidGuessWord(guess_word)
+            raise InvalidGuessWordError(guess_word)
 
         self.guesses.append(guess_word)
 
@@ -103,11 +106,11 @@ class WordleGame(Game):
             return False
 
 
-class InvalidWordListWordError(Exception):
+class InvalidWordListError(Exception):
     pass
 
 
-class InvalidGuessWord(Exception):
+class InvalidGuessWordError(Exception):
     pass
 
 

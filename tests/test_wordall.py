@@ -45,7 +45,7 @@ class TestWordleGameInit:
         "mock_word_list", [["APPLE", "BREA8", "CHIPS"]], indirect=True
     )
     def test_exception_on_non_alphabet_word_list(self, mock_word_list):
-        with pytest.raises(wordall.InvalidWordListWordError):
+        with pytest.raises(wordall.InvalidWordListError):
             wordall.WordleGame("/a/b/c", 0)
 
     @pytest.mark.parametrize("mock_word_list", [[]], indirect=True)
