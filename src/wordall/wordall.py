@@ -71,7 +71,7 @@ class WordleGame(Game):
         with open(word_list_path) as word_list_file:
             word_list = [w.strip() for w in word_list_file.readlines()]
 
-        invalid = [w for w in word_list if self.is_word_in_alphabet(w)]
+        invalid = [w for w in word_list if not self.is_word_in_alphabet(w)]
         if invalid:
             raise InvalidWordListWordError(invalid)
 
