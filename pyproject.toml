@@ -1,0 +1,14 @@
+[project]
+name = "wordall"
+version = "0.1.0"
+dependencies = [
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pip-tools",
+    "pytest",
+    "pytest-mock",
+    "ruff",
+]
