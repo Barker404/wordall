@@ -51,3 +51,12 @@ After activating an environment with dev dependencies:
 ```
 pytest tests/
 ```
+
+### Format and lint
+```
+ruff format && ruff check
+```
+To autofix linting errors (where possible):
+```
+ruff check --fix
+```

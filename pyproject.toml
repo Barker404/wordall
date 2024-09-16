@@ -19,3 +19,53 @@ dev = [
     "pytest-mock",
     "ruff",
 ]
+
+[tool.ruff.lint]
+select = [
+    "A",    # flake8-builtins
+    "ARG",  # flake8-unused-arguments
+    "B",    # flake8-bugbear
+    "BLE",  # flake8-blind-except
+    "C4",   # flake8-comprehensions
+    "E",    # pycodestyle Error 
+    "ERA",  # eradicate
+    "EXE",  # flake8-executable
+    "F",    # Pyflakes
+    "FBT",  # flake8-boolean-trap
+    "FLY",  # flynt
+    "FURB", # refurb
+    "G",    # flake8-logging-format
+    "I",    # isort
+    "INP",  # flake8-no-pep420
+    "LOG",  # flake8-logging
+    "N",    # pep8-naming
+    "PIE",  # flake8-pie
+    "PL",   # Pylint
+    "PT",   # flake8-pytest-style
+    "PTH",  # flake8-use-pathlib
+    "RET",  # flake8-return
+    "RUF",  # Ruff-specific rules
+    "S",    # flake8-bandit
+    "SIM",  # flake8-simplify
+    "SLF",  # flake8-self
+    "SLOT", # flake8-slots
+    "T10",  # flake8-debugger
+    "T20",  # flake8-print
+    "TCH",  # flake8-type-checking
+    "TID",  # flake8-tidy-imports
+    "TRY",  # tryceratops
+    "UP",   # pyupgrade
+    "W",    # pycodestyle Warning
+]
+ignore = [
+    "RET504",   # I like the symmetry of an else after a return
+    "RET505",   # I like the symmetry of an elif after a return
+    "S101",     # assert is fine in tests or as sanity check/docs elsewhere
+    "TRY003",   # I want descriptive error messages without unecessary subclasses
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "ARG002",   # Pytest fixtures often require unused arguments
+    "PLR2004",  # Magic values in tests are fine
+]
