@@ -1,5 +1,6 @@
 import abc
 import enum
+import pathlib
 import random
 import string
 
@@ -52,7 +53,7 @@ class WordleGame(Game):
 
     ALPHABET = string.ascii_uppercase
 
-    def __init__(self, word_list_path: str, guess_limit: int) -> None:
+    def __init__(self, word_list_path: pathlib.Path, guess_limit: int) -> None:
         super().__init__()
         self.word_list = self._load_word_list(word_list_path)
         self.target = self._select_target()
@@ -60,13 +61,13 @@ class WordleGame(Game):
         self.guess_limit = guess_limit
         self.game_state = GameState.GUESSING
 
-    def _load_word_list(self, word_list_path: str) -> list[str]:
+    def _load_word_list(self, word_list_path: pathlib.Path) -> list[str]:
         """
         Loads the words for the given file and returns them as a list. The words in the
         file should be one per line. Raises InvalidWordListWordError if any word does
         not match the alphabet.
         """
-        with open(word_list_path) as word_list_file:
+        with word_list_path.open() as word_list_file:
             word_list = [line.strip() for line in word_list_file]
 
         if not word_list:

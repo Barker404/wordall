@@ -1,3 +1,4 @@
+import pathlib
 from collections import abc as collections_abc
 from unittest import mock
 
@@ -32,9 +33,17 @@ def _mock_word_list_helper(
     word_list: collections_abc.Iterable, mocker: pytest_mock.MockerFixture
 ) -> tuple[mock.MagicMock, collections_abc.Iterable]:
     word_list_data = "\n".join(word_list)
-    open_mock = mocker.patch(
-        "builtins.open", mocker.mock_open(read_data=word_list_data)
-    )
+
+    # Pathlib uses an open *method*, so to be able to inspect the Path object that
+    # open() was called on we need to ensure self is passed to it, which requires
+    # binding to the instance. Wrapping the mock object in a function allows this to
+    # happen.
+    open_mock = mocker.mock_open(read_data=word_list_data)
+
+    def open_mock_wrapper(self, *args, **kwargs):
+        return open_mock(self, *args, **kwargs)
+
+    mocker.patch("pathlib.Path.open", open_mock_wrapper)
     return open_mock, word_list
 
 
@@ -59,7 +68,7 @@ class TestWordleGameInit:
         self, mock_valid_word_list: tuple[mock.MagicMock, collections_abc.Iterable]
     ) -> None:
         open_mock, word_list = mock_valid_word_list
-        word_list_path = "/a/b/c"
+        word_list_path = pathlib.Path("/a/b/c")
 
         wordle_game = wordall.WordleGame(word_list_path, 0)
 
@@ -73,13 +82,13 @@ class TestWordleGameInit:
         ],
     ) -> None:
         with pytest.raises(wordall.InvalidWordListError):
-            wordall.WordleGame("/a/b/c", 0)
+            wordall.WordleGame(pathlib.Path("/a/b/c"), 0)
 
     def test_raises_exception_on_empty_word_list(
         self, mock_empty_word_list: tuple[mock.MagicMock, collections_abc.Iterable]
     ) -> None:
         with pytest.raises(wordall.InvalidWordListError):
-            wordall.WordleGame("/a/b/c", 0)
+            wordall.WordleGame(pathlib.Path("/a/b/c"), 0)
 
     def test_selects_random_target(
         self,
@@ -90,7 +99,7 @@ class TestWordleGameInit:
 
         mock_choice = mocker.patch("random.choice")
 
-        wordle_game = wordall.WordleGame("/a/b/c", 0)
+        wordle_game = wordall.WordleGame(pathlib.Path("/a/b/c"), 0)
 
         mock_choice.assert_called_once_with(word_list)
         assert wordle_game.target == mock_choice.return_value
@@ -102,7 +111,7 @@ class TestWordleGuessWord:
         self, mock_valid_word_list: tuple[mock.MagicMock, collections_abc.Iterable]
     ) -> wordall.WordleGame:
         _, word_list = mock_valid_word_list
-        return wordall.WordleGame("/a/b/c", 3)
+        return wordall.WordleGame(pathlib.Path("/a/b/c"), 3)
 
     def test_game_continues_when_incorrect_word(
         self, wordle_game_instance: wordall.WordleGame
