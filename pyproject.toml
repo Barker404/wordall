@@ -1,8 +1,15 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "wordall"
 version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.11"
 dependencies = [
-    "requests",
+    "requests", # Not used, but here to make environment testing easier until other dependency exists
 ]
 
 [project.optional-dependencies]

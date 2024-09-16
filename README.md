@@ -34,3 +34,9 @@ To upgrade all:
 ```
 ./pip_compile.sh -u
 ```
+
+### Build package
+After activating an environment (to get `build`):
+```
+python -m build
+```
