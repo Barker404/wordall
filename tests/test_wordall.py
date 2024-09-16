@@ -142,9 +142,7 @@ class TestWordleGuessWord:
         assert wordle_game_instance.game_state == wordall.GameState.GUESSING
 
         wordle_game_instance.guess_word(word_list[1])
-        print(f"1 {wordle_game_instance.guesses}")
         wordle_game_instance.guess_word(word_list[1])
-        print(f"2 {wordle_game_instance.guesses}")
         return_value = wordle_game_instance.guess_word(word_list[1])
 
         assert return_value

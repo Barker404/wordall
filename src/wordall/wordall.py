@@ -23,11 +23,10 @@ class Game(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def ALPHABET(self) -> str:
+    def ALPHABET(self) -> str:  # noqa: N802
         """
         The alphabet that target and guess words are made up of, as a single string.
         """
-        pass
 
     @abc.abstractmethod
     def guess_word(self, guess_word: str) -> bool:
@@ -39,7 +38,6 @@ class Game(abc.ABC):
             is complete when the user has guessed the target word(s) successfully or run
             out of guess attempts.
         """
-        pass
 
     @classmethod
     def is_word_in_alphabet(cls, word: str) -> bool:
@@ -69,7 +67,7 @@ class WordleGame(Game):
         not match the alphabet.
         """
         with open(word_list_path) as word_list_file:
-            word_list = [w.strip() for w in word_list_file.readlines()]
+            word_list = [line.strip() for line in word_list_file]
 
         if not word_list:
             raise InvalidWordListError("Empty word list")
@@ -85,7 +83,7 @@ class WordleGame(Game):
         Chooses a target word, which the user must try to guess, randomly from the word
         list.
         """
-        return random.choice(self.word_list)
+        return random.choice(self.word_list)  # noqa: S311
 
     def guess_word(self, guess_word: str) -> bool:
         if self.game_state != GameState.GUESSING:
