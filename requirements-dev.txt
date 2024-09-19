@@ -16,6 +16,10 @@ idna==3.8
     # via requests
 iniconfig==2.0.0
     # via pytest
+mypy==1.11.2
+    # via wordall (/home/lewis/repos/wordall/pyproject.toml)
+mypy-extensions==1.0.0
+    # via mypy
 packaging==24.1
     # via
     #   build
@@ -38,6 +42,8 @@ requests==2.32.3
     # via wordall (/home/lewis/repos/wordall/pyproject.toml)
 ruff==0.6.4
     # via wordall (/home/lewis/repos/wordall/pyproject.toml)
+typing-extensions==4.12.2
+    # via mypy
 urllib3==2.2.2
     # via requests
 wheel==0.44.0

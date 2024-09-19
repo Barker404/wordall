@@ -18,6 +18,7 @@ dev = [
     "pytest",
     "pytest-mock",
     "ruff",
+    "mypy",
 ]
 
 [tool.ruff.lint]

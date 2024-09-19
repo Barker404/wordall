@@ -60,3 +60,8 @@ To autofix linting errors (where possible):
 ```
 ruff check --fix
 ```
+
+### Static type check
+```
+mypy --strict .
+```
