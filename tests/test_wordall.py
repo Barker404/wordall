@@ -183,3 +183,9 @@ class TestWordleGuessWord:
         wordle_game_instance.guess_word(word_list[0])
         with pytest.raises(wordall.GameAlreadyFinishedError):
             wordle_game_instance.guess_word(word_list[1])
+
+    def test_raises_exception_for_non_alphabet_guess(
+        self, wordle_game_instance: wordall.WordleGame
+    ) -> None:
+        with pytest.raises(wordall.InvalidGuessWordError):
+            wordle_game_instance.guess_word("ABCD5")

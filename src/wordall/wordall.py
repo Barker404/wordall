@@ -90,7 +90,7 @@ class WordleGame(Game):
         if self.game_state != GameState.GUESSING:
             raise GameAlreadyFinishedError()
 
-        if not self.is_word_in_alphabet:
+        if not self.is_word_in_alphabet(guess_word):
             raise InvalidGuessWordError(guess_word)
 
         self.guesses.append(guess_word)
