@@ -3,6 +3,7 @@ import enum
 import pathlib
 import random
 import string
+from typing import ClassVar
 
 
 class GameState(enum.Enum):
@@ -20,14 +21,10 @@ class Game(abc.ABC):
 
     game_state: GameState
 
-    ALPHABET: str
-
-    @property
-    @abc.abstractmethod
-    def ALPHABET(self) -> str:  # noqa: N802
-        """
-        The alphabet that target and guess words are made up of, as a single string.
-        """
+    ALPHABET: ClassVar[str] = string.ascii_uppercase
+    """
+    The alphabet that target and guess words are made up of, as a single string.
+    """
 
     @abc.abstractmethod
     def guess_word(self, guess_word: str) -> bool:
@@ -51,13 +48,11 @@ class WordleGame(Game):
     The logic for a classic wordle game, in which a single word is being guessed.
     """
 
-    ALPHABET = string.ascii_uppercase
-
     def __init__(self, word_list_path: pathlib.Path, guess_limit: int) -> None:
         super().__init__()
         self.word_list = self._load_word_list(word_list_path)
         self.target = self._select_target()
-        self.guesses = []
+        self.guesses: list[str] = []
         self.guess_limit = guess_limit
         self.game_state = GameState.GUESSING
 
