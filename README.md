@@ -52,16 +52,30 @@ After activating an environment with dev dependencies:
 pytest tests/
 ```
 
-### Format and lint
+### Formatting, linting, and type-checking
+Formatting and linting are primarily done using ruff, and managed via pre-commit.
+Type-checking is done using mypy, which is installed in the venv (outside of
+pre-commit's isolated venv) and run by pre-commit (for reasons see
+https://github.com/python/mypy/issues/13916).
+
+Set up pre-commit:
 ```
-ruff format && ruff check
-```
-To autofix linting errors (where possible):
-```
-ruff check --fix
+pre-commit install
 ```
 
-### Static type check
+Checks will run before commit, and abort commit if any fail or make changes - in which
+case the changes will need to be reviewed and git added.
+
+To run ruff manually on all files:
+```
+pre-commit run ruff --all-files
+```
+
+To run mypy manually on all files:
+```
+pre-commit run mypy --all-files
+```
+or
 ```
 mypy --strict .
 ```
