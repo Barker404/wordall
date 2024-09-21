@@ -53,9 +53,10 @@ pytest --cov=src tests/
 ```
 
 ### Formatting, linting, and type-checking
-Formatting and linting are primarily done using ruff, and managed via pre-commit.
-Type-checking is done using mypy, which is installed in the venv (outside of
-pre-commit's isolated venv) and run by pre-commit (for reasons see
+Pytheon formatting and linting are done using ruff for python. Shell script formatting
+uses shfmt and linting uses shellcheck. Both are managed via pre-commit. Type-checking
+is done using mypy, which is installed in the venv (outside of pre-commit's isolated
+venv) and run by pre-commit (for reasons see
 https://github.com/python/mypy/issues/13916).
 
 Set up pre-commit:
@@ -70,6 +71,7 @@ To run ruff manually on all files:
 ```
 pre-commit run ruff --all-files
 ```
+And similar for `shfmt` and `shellcheck`.
 
 To run mypy manually on all files:
 ```

@@ -7,6 +7,14 @@ repos:
   - id: check-toml
   - id: check-yaml
   - id: end-of-file-fixer
+- repo: https://github.com/scop/pre-commit-shfmt
+  rev: v3.9.0-1
+  hooks:
+  - id: shfmt
+-   repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+    -   id: shellcheck
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.6.6
   hooks:
