@@ -49,7 +49,7 @@ python -m build
 ### Run tests
 After activating an environment with dev dependencies:
 ```
-pytest tests/
+pytest --cov=src tests/
 ```
 
 ### Formatting, linting, and type-checking

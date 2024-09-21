@@ -14,6 +14,8 @@ charset-normalizer==3.3.2
     # via requests
 click==8.1.7
     # via pip-tools
+coverage[toml]==7.6.1
+    # via pytest-cov
 distlib==0.3.8
     # via virtualenv
 filelock==3.16.1
@@ -48,8 +50,11 @@ pyproject-hooks==1.1.0
     #   pip-tools
 pytest==8.3.3
     # via
+    #   pytest-cov
     #   pytest-mock
     #   wordall (/home/lewis/repos/wordall/pyproject.toml)
+pytest-cov==5.0.0
+    # via wordall (/home/lewis/repos/wordall/pyproject.toml)
 pytest-mock==3.14.0
     # via wordall (/home/lewis/repos/wordall/pyproject.toml)
 pyyaml==6.0.2
