@@ -1,5 +1,4 @@
 import pathlib
-from collections import abc as collections_abc
 from typing import Any
 from unittest import mock
 
@@ -12,27 +11,29 @@ from wordall import wordall
 @pytest.fixture
 def mock_valid_dictionary_file(
     mocker: pytest_mock.MockerFixture,
-) -> tuple[mock.MagicMock, set[str]]:
-    return _mock_dictionary_file_helper(["APPLE", "BREAD", "CHIPS"], mocker)
+) -> tuple[mock.MagicMock, list[str]]:
+    return _mock_dictionary_file_helper(
+        ["APPLE", "BREAD", "CHIPS", "DONUTS", "EGGS"], mocker
+    )
 
 
 @pytest.fixture
 def mock_invalid_character_dictionary_file(
     mocker: pytest_mock.MockerFixture,
-) -> tuple[mock.MagicMock, set[str]]:
+) -> tuple[mock.MagicMock, list[str]]:
     return _mock_dictionary_file_helper(["APPLE", "BREA8", "CHIPS"], mocker)
 
 
 @pytest.fixture
 def mock_empty_dictionary_file(
     mocker: pytest_mock.MockerFixture,
-) -> tuple[mock.MagicMock, set[str]]:
+) -> tuple[mock.MagicMock, list[str]]:
     return _mock_dictionary_file_helper([], mocker)
 
 
 def _mock_dictionary_file_helper(
-    word_list: collections_abc.Iterable[str], mocker: pytest_mock.MockerFixture
-) -> tuple[mock.MagicMock, set[str]]:
+    word_list: list[str], mocker: pytest_mock.MockerFixture
+) -> tuple[mock.MagicMock, list[str]]:
     word_list_data = "\n".join(word_list)
 
     # Pathlib uses an open *method*, so to be able to inspect the Path object that
@@ -45,7 +46,7 @@ def _mock_dictionary_file_helper(
         return open_mock(self, *args, **kwargs)
 
     mocker.patch("pathlib.Path.open", open_mock_wrapper)
-    return open_mock, set(word_list)
+    return open_mock, word_list
 
 
 class TestIsWordInAlphabet:
@@ -67,50 +68,54 @@ class TestIsWordInAlphabet:
 class TestWordleGameInit:
     def test_loads_word_dictionary(
         self,
-        mock_valid_dictionary_file: tuple[
-            mock.MagicMock, collections_abc.Iterable[str]
-        ],
+        mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
-        open_mock, word_dictionary = mock_valid_dictionary_file
+        open_mock, file_word_list = mock_valid_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordall.WordleGame(dictionary_file_path, 0)
+        wordle_game = wordall.WordleGame(dictionary_file_path, 1)
 
         open_mock.assert_called_once_with(dictionary_file_path)
-        assert wordle_game.word_dictionary == word_dictionary
+        assert wordle_game.word_dictionary == set(file_word_list)
+
+    def test_loads_word_dictionary_with_length(
+        self,
+        mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
+    ) -> None:
+        open_mock, _ = mock_valid_dictionary_file
+        dictionary_file_path = pathlib.Path("/a/b/c")
+
+        wordle_game = wordall.WordleGame(dictionary_file_path, 1, word_length=5)
+
+        open_mock.assert_called_once_with(dictionary_file_path)
+        assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
 
     def test_raises_exception_on_non_alphabet_dictionary_word(
         self,
-        mock_invalid_character_dictionary_file: tuple[
-            mock.MagicMock, collections_abc.Iterable[str]
-        ],
+        mock_invalid_character_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
         with pytest.raises(wordall.InvalidDictionaryFileError):
-            wordall.WordleGame(pathlib.Path("/a/b/c"), 0)
+            wordall.WordleGame(pathlib.Path("/a/b/c"), 1)
 
     def test_raises_exception_on_empty_dictionary(
         self,
-        mock_empty_dictionary_file: tuple[
-            mock.MagicMock, collections_abc.Iterable[str]
-        ],
+        mock_empty_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
         with pytest.raises(wordall.InvalidDictionaryFileError):
-            wordall.WordleGame(pathlib.Path("/a/b/c"), 0)
+            wordall.WordleGame(pathlib.Path("/a/b/c"), 1)
 
     def test_selects_random_target(
         self,
         mocker: pytest_mock.MockerFixture,
-        mock_valid_dictionary_file: tuple[
-            mock.MagicMock, collections_abc.Iterable[str]
-        ],
+        mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
-        _, word_dictionary = mock_valid_dictionary_file
+        _, file_word_list = mock_valid_dictionary_file
 
         mock_choice = mocker.patch("random.choice")
 
         wordle_game = wordall.WordleGame(pathlib.Path("/a/b/c"), 0)
 
-        mock_choice.assert_called_once_with(list(word_dictionary))
+        mock_choice.assert_called_once_with(list(set(file_word_list)))
         assert wordle_game.target == mock_choice.return_value
 
 
@@ -118,11 +123,15 @@ class TestWordleGuessWord:
     @pytest.fixture
     def wordle_game_instance(
         self,
-        mock_valid_dictionary_file: tuple[
-            mock.MagicMock, collections_abc.Iterable[str]
-        ],
+        mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> wordall.WordleGame:
         return wordall.WordleGame(pathlib.Path("/a/b/c"), 3)
+
+    @pytest.fixture
+    def wordle_game_instance_5_letter(
+        self, mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]]
+    ) -> wordall.WordleGame:
+        return wordall.WordleGame(pathlib.Path("/a/b/c"), 3, word_length=5)
 
     def test_game_continues_when_incorrect_word(
         self, wordle_game_instance: wordall.WordleGame
@@ -206,3 +215,9 @@ class TestWordleGuessWord:
     ) -> None:
         with pytest.raises(wordall.InvalidGuessWordError):
             wordle_game_instance.guess_word("BREAG")
+
+    def test_raises_exception_for_wrong_length_word_guess(
+        self, wordle_game_instance_5_letter: wordall.WordleGame
+    ) -> None:
+        with pytest.raises(wordall.InvalidGuessWordError):
+            wordle_game_instance_5_letter.guess_word("DONUTS")

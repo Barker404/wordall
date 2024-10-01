@@ -48,22 +48,40 @@ class WordleGame(Game):
     The logic for a classic wordle game, in which a single word is being guessed.
     """
 
-    def __init__(self, dictionary_file_path: pathlib.Path, guess_limit: int) -> None:
+    def __init__(
+        self,
+        dictionary_file_path: pathlib.Path,
+        guess_limit: int,
+        word_length: int | None = None,
+    ) -> None:
         super().__init__()
-        self.word_dictionary = self._load_word_dictionary(dictionary_file_path)
-        self.target = self._select_target()
-        self.guesses: list[str] = []
+
         self.guess_limit = guess_limit
+        self.word_length = word_length
+
+        self.word_dictionary = self._load_word_dictionary(
+            dictionary_file_path, word_length=word_length
+        )
+        self.target = self._select_target()
+
+        self.guesses: list[str] = []
         self.game_state = GameState.GUESSING
 
-    def _load_word_dictionary(self, dictionary_file_path: pathlib.Path) -> set[str]:
+    def _load_word_dictionary(
+        self, dictionary_file_path: pathlib.Path, word_length: int | None = None
+    ) -> set[str]:
         """
         Loads the dictionary of words from the given file. The words in the file should
         be one per line. Raises InvalidDictionaryFileError if any word does not match
         the alphabet.
         """
         with dictionary_file_path.open() as dictionary_file:
-            dictionary = {line.strip() for line in dictionary_file}
+            all_words = [line.strip() for line in dictionary_file]
+            dictionary = {
+                word
+                for word in all_words
+                if word_length is None or len(word) == word_length
+            }
 
         if not dictionary:
             raise InvalidDictionaryFileError("Empty dictionary file")
