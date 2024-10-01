@@ -190,3 +190,9 @@ class TestWordleGuessWord:
     ) -> None:
         with pytest.raises(wordall.InvalidGuessWordError):
             wordle_game_instance.guess_word("ABCD5")
+
+    def test_raises_exception_for_invalid_word_guess(
+        self, wordle_game_instance: wordall.WordleGame
+    ) -> None:
+        with pytest.raises(wordall.InvalidGuessWordError):
+            wordle_game_instance.guess_word("BREAG")
