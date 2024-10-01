@@ -48,44 +48,44 @@ class WordleGame(Game):
     The logic for a classic wordle game, in which a single word is being guessed.
     """
 
-    def __init__(self, word_list_path: pathlib.Path, guess_limit: int) -> None:
+    def __init__(self, dictionary_file_path: pathlib.Path, guess_limit: int) -> None:
         super().__init__()
-        self.word_list = self._load_word_list(word_list_path)
+        self.word_dictionary = self._load_word_dictionary(dictionary_file_path)
         self.target = self._select_target()
         self.guesses: list[str] = []
         self.guess_limit = guess_limit
         self.game_state = GameState.GUESSING
 
-    def _load_word_list(self, word_list_path: pathlib.Path) -> list[str]:
+    def _load_word_dictionary(self, dictionary_file_path: pathlib.Path) -> set[str]:
         """
-        Loads the words for the given file and returns them as a list. The words in the
-        file should be one per line. Raises InvalidWordListWordError if any word does
-        not match the alphabet.
+        Loads the dictionary of words from the given file. The words in the file should
+        be one per line. Raises InvalidDictionaryFileError if any word does not match
+        the alphabet.
         """
-        with word_list_path.open() as word_list_file:
-            word_list = [line.strip() for line in word_list_file]
+        with dictionary_file_path.open() as dictionary_file:
+            dictionary = {line.strip() for line in dictionary_file}
 
-        if not word_list:
-            raise InvalidWordListError("Empty word list")
+        if not dictionary:
+            raise InvalidDictionaryFileError("Empty dictionary file")
 
-        invalid = [w for w in word_list if not self.is_word_in_alphabet(w)]
+        invalid = [w for w in dictionary if not self.is_word_in_alphabet(w)]
         if invalid:
-            raise InvalidWordListError(f"Invalid words: {invalid}")
+            raise InvalidDictionaryFileError(f"Invalid words: {invalid}")
 
-        return word_list
+        return dictionary
 
     def _select_target(self) -> str:
         """
         Chooses a target word, which the user must try to guess, randomly from the word
-        list.
+        dictionary.
         """
-        return random.choice(self.word_list)  # noqa: S311
+        return random.choice(list(self.word_dictionary))  # noqa: S311
 
     def guess_word(self, guess_word: str) -> bool:
         if self.game_state != GameState.GUESSING:
             raise GameAlreadyFinishedError()
 
-        if guess_word not in self.word_list:
+        if guess_word not in self.word_dictionary:
             raise InvalidGuessWordError(guess_word)
 
         self.guesses.append(guess_word)
@@ -100,7 +100,7 @@ class WordleGame(Game):
             return False
 
 
-class InvalidWordListError(Exception):
+class InvalidDictionaryFileError(Exception):
     pass
 
 
