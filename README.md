@@ -67,11 +67,11 @@ pre-commit install
 Checks will run before commit, and abort commit if any fail or make changes - in which
 case the changes will need to be reviewed and git added.
 
-To run ruff manually on all files:
+To run ruff lnting manually on all files:
 ```
 pre-commit run ruff --all-files
 ```
-And similar for `shfmt` and `shellcheck`.
+And similar for `ruff-format`, `shfmt` and `shellcheck`.
 
 To run mypy manually on all files:
 ```
