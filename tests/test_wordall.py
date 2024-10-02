@@ -18,6 +18,15 @@ def mock_valid_dictionary_file(
 
 
 @pytest.fixture
+def mock_valid_empty_line_dictionary_file(
+    mocker: pytest_mock.MockerFixture,
+) -> tuple[mock.MagicMock, list[str]]:
+    return _mock_dictionary_file_helper(
+        ["", "APPLE", "BREAD", "", "CHIPS", "DONUTS", "EGGS", ""], mocker
+    )
+
+
+@pytest.fixture
 def mock_invalid_character_dictionary_file(
     mocker: pytest_mock.MockerFixture,
 ) -> tuple[mock.MagicMock, list[str]]:
@@ -83,6 +92,18 @@ class TestWordleGameInit:
         mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
         open_mock, _ = mock_valid_dictionary_file
+        dictionary_file_path = pathlib.Path("/a/b/c")
+
+        wordle_game = wordall.WordleGame(dictionary_file_path, 1, word_length=5)
+
+        open_mock.assert_called_once_with(dictionary_file_path)
+        assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
+
+    def test_skips_empty_lines_in_dictionary(
+        self,
+        mock_valid_empty_line_dictionary_file: tuple[mock.MagicMock, list[str]],
+    ) -> None:
+        open_mock, _ = mock_valid_empty_line_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
         wordle_game = wordall.WordleGame(dictionary_file_path, 1, word_length=5)
@@ -218,6 +239,12 @@ class TestWordleGuessWord:
     ) -> None:
         with pytest.raises(wordall.InvalidGuessWordError):
             wordle_game_instance.guess_word("BREAG")
+
+    def test_raises_exception_for_empty_word_guess(
+        self, wordle_game_instance: wordall.WordleGame
+    ) -> None:
+        with pytest.raises(wordall.InvalidGuessWordError):
+            wordle_game_instance.guess_word("")
 
     def test_raises_exception_for_wrong_length_word_guess(
         self, wordle_game_instance_5_letter: wordall.WordleGame

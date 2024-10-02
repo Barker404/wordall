@@ -83,7 +83,7 @@ class WordleGame(Game):
         the alphabet.
         """
         with dictionary_file_path.open() as dictionary_file:
-            all_words = [line.strip() for line in dictionary_file]
+            all_words = [line_ for line in dictionary_file if (line_ := line.strip())]
             dictionary = {
                 word
                 for word in all_words
