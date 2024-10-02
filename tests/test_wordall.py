@@ -157,76 +157,76 @@ class TestWordleGuessWord:
     def test_game_continues_when_incorrect_word(
         self, wordle_game_instance: wordall.WordleGame
     ) -> None:
-        word_list = list(wordle_game_instance.word_dictionary)
-        wordle_game_instance.target = word_list[0]
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
         assert wordle_game_instance.guesses == []
         assert wordle_game_instance.game_state == wordall.GameState.GUESSING
 
-        return_value = wordle_game_instance.guess_word(word_list[1])
+        return_value = wordle_game_instance.guess_word("BREAD")
 
         assert not return_value
-        expected_guess = wordall.Guess(word_list[1], word_list[0])
+        expected_guess = wordall.Guess("BREAD", "APPLE")
         assert wordle_game_instance.guesses == [expected_guess]
         assert wordle_game_instance.game_state == wordall.GameState.GUESSING
 
     def test_game_ends_when_correct_word(
         self, wordle_game_instance: wordall.WordleGame
     ) -> None:
-        word_list = list(wordle_game_instance.word_dictionary)
-        wordle_game_instance.target = word_list[0]
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
         assert wordle_game_instance.guesses == []
         assert wordle_game_instance.game_state == wordall.GameState.GUESSING
 
-        return_value = wordle_game_instance.guess_word(word_list[0])
+        return_value = wordle_game_instance.guess_word("APPLE")
 
         assert return_value
-        expected_guess = wordall.Guess(word_list[0], word_list[0])
+        expected_guess = wordall.Guess("APPLE", "APPLE")
         assert wordle_game_instance.guesses == [expected_guess]
         assert wordle_game_instance.game_state == wordall.GameState.SUCCEEDED  # type: ignore[comparison-overlap] # False positive, https://github.com/python/mypy/issues/17317
 
     def test_games_ends_when_guess_limit_reached(
         self, wordle_game_instance: wordall.WordleGame
     ) -> None:
-        word_list = list(wordle_game_instance.word_dictionary)
-        wordle_game_instance.target = word_list[0]
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
         assert wordle_game_instance.guesses == []
         assert wordle_game_instance.guess_limit == 3
         assert wordle_game_instance.game_state == wordall.GameState.GUESSING
 
-        wordle_game_instance.guess_word(word_list[1])
-        wordle_game_instance.guess_word(word_list[1])
-        return_value = wordle_game_instance.guess_word(word_list[1])
+        wordle_game_instance.guess_word("BREAD")
+        wordle_game_instance.guess_word("BREAD")
+        return_value = wordle_game_instance.guess_word("BREAD")
 
         assert return_value
-        expected_guess = wordall.Guess(word_list[1], word_list[0])
+        expected_guess = wordall.Guess("BREAD", "APPLE")
         assert wordle_game_instance.guesses == [expected_guess] * 3
         assert wordle_game_instance.game_state == wordall.GameState.FAILED  # type: ignore[comparison-overlap] # False positive, https://github.com/python/mypy/issues/17317
 
     def test_raises_exception_when_game_already_failed(
         self, wordle_game_instance: wordall.WordleGame
     ) -> None:
-        word_list = list(wordle_game_instance.word_dictionary)
-        wordle_game_instance.target = word_list[0]
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
         assert wordle_game_instance.guesses == []
         assert wordle_game_instance.guess_limit == 3
 
-        wordle_game_instance.guess_word(word_list[1])
-        wordle_game_instance.guess_word(word_list[1])
-        wordle_game_instance.guess_word(word_list[1])
+        wordle_game_instance.guess_word("BREAD")
+        wordle_game_instance.guess_word("BREAD")
+        wordle_game_instance.guess_word("BREAD")
         with pytest.raises(wordall.GameAlreadyFinishedError):
-            wordle_game_instance.guess_word(word_list[1])
+            wordle_game_instance.guess_word("BREAD")
 
     def test_raises_exception_when_game_already_succeeded(
         self, wordle_game_instance: wordall.WordleGame
     ) -> None:
-        word_list = list(wordle_game_instance.word_dictionary)
-        wordle_game_instance.target = word_list[0]
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
         assert wordle_game_instance.guesses == []
         assert wordle_game_instance.guess_limit == 3
 
-        wordle_game_instance.guess_word(word_list[0])
+        wordle_game_instance.guess_word("APPLE")
         with pytest.raises(wordall.GameAlreadyFinishedError):
-            wordle_game_instance.guess_word(word_list[1])
+            wordle_game_instance.guess_word("BREAD")
 
     def test_raises_exception_for_non_alphabet_guess(
         self, wordle_game_instance: wordall.WordleGame
@@ -251,6 +251,84 @@ class TestWordleGuessWord:
     ) -> None:
         with pytest.raises(wordall.InvalidGuessWordError):
             wordle_game_instance_5_letter.guess_word("DONUTS")
+
+    def test_updates_alphabet_letter_states_found(
+        self, wordle_game_instance: wordall.WordleGame
+    ) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+
+        wordle_game_instance.word_dictionary.add("AAAAA")
+        wordle_game_instance.guess_word("AAAAA")
+
+        expected_alphabet_state = {
+            c: wordall.AlphabetLetterState.NOT_GUESSED
+            for c in wordle_game_instance.ALPHABET
+        }
+        expected_alphabet_state["A"] = wordall.AlphabetLetterState.FOUND
+        assert wordle_game_instance.alphabet_states == expected_alphabet_state
+
+        wordle_game_instance.word_dictionary.add("XXXXA")
+        wordle_game_instance.guess_word("XXXXA")
+
+        expected_alphabet_state["X"] = wordall.AlphabetLetterState.UNUSED
+        assert wordle_game_instance.alphabet_states == expected_alphabet_state
+
+    def test_updates_alphabet_letter_states_found_one_of_two(
+        self, wordle_game_instance: wordall.WordleGame
+    ) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+
+        wordle_game_instance.word_dictionary.add("XPXXX")
+        wordle_game_instance.guess_word("XPXXX")
+
+        expected_alphabet_state = {
+            c: wordall.AlphabetLetterState.NOT_GUESSED
+            for c in wordle_game_instance.ALPHABET
+        }
+        expected_alphabet_state["P"] = wordall.AlphabetLetterState.FOUND
+        expected_alphabet_state["X"] = wordall.AlphabetLetterState.UNUSED
+        assert wordle_game_instance.alphabet_states == expected_alphabet_state
+
+    def test_updates_alphabet_letter_states_unused(
+        self, wordle_game_instance: wordall.WordleGame
+    ) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+
+        wordle_game_instance.word_dictionary.add("XXXXX")
+        wordle_game_instance.guess_word("XXXXX")
+
+        expected_alphabet_state = {
+            c: wordall.AlphabetLetterState.NOT_GUESSED
+            for c in wordle_game_instance.ALPHABET
+        }
+        expected_alphabet_state["X"] = wordall.AlphabetLetterState.UNUSED
+        assert wordle_game_instance.alphabet_states == expected_alphabet_state
+
+    def test_updates_alphabet_letter_states_elsewhere(
+        self, wordle_game_instance: wordall.WordleGame
+    ) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+
+        wordle_game_instance.word_dictionary.add("XXXXA")
+        wordle_game_instance.guess_word("XXXXA")
+
+        expected_alphabet_state = {
+            c: wordall.AlphabetLetterState.NOT_GUESSED
+            for c in wordle_game_instance.ALPHABET
+        }
+        expected_alphabet_state["A"] = wordall.AlphabetLetterState.FOUND_ELSEWHERE
+        expected_alphabet_state["X"] = wordall.AlphabetLetterState.UNUSED
+        assert wordle_game_instance.alphabet_states == expected_alphabet_state
+
+        wordle_game_instance.word_dictionary.add("AXXXX")
+        wordle_game_instance.guess_word("AXXXX")
+
+        expected_alphabet_state["A"] = wordall.AlphabetLetterState.FOUND
+        assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
 
 class TestGuess:

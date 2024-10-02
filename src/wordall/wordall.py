@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import abc
 import collections
 import enum
-import pathlib
 import random
 import string
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
+
+if TYPE_CHECKING:
+    import pathlib
 
 
 class GameState(enum.Enum):
@@ -17,6 +21,13 @@ class GuessLetterState(enum.Enum):
     CORRECT = 1
     ELSEWHERE = 2
     INCORRECT = 3
+
+
+class AlphabetLetterState(enum.Enum):
+    FOUND = 1
+    FOUND_ELSEWHERE = 2
+    UNUSED = 3
+    NOT_GUESSED = 4
 
 
 class Game(abc.ABC):
@@ -72,6 +83,9 @@ class WordleGame(Game):
         self.target = self._select_target()
 
         self.guesses: list[Guess] = []
+        self.alphabet_states = {
+            c: AlphabetLetterState.NOT_GUESSED for c in self.ALPHABET
+        }
         self.game_state = GameState.GUESSING
 
     def _load_word_dictionary(
@@ -113,7 +127,9 @@ class WordleGame(Game):
         if guess_word not in self.word_dictionary:
             raise InvalidGuessWordError(guess_word)
 
-        self.guesses.append(Guess(guess_word, self.target))
+        guess = Guess(guess_word, self.target)
+        self.guesses.append(guess)
+        self._update_alphabet_states(guess)
 
         if guess_word == self.target:
             self.game_state = GameState.SUCCEEDED
@@ -123,6 +139,29 @@ class WordleGame(Game):
             return True
         else:
             return False
+
+    def _update_alphabet_states(self, guess: Guess) -> None:
+        """
+        Updates game alphabet states as necessary based on the guess.
+
+        All letters start NOT_GUESSED. They can transition to FOUND if guessed
+        correctly anywhere (even if more exist) or UNUSED if guessed and not present in
+        the target. They can also transition to FOUND_ELSEWHERE is guessed in the wrong
+        position. FOUND_ELSEWHERE words can later transition to FOUND.
+        """
+        for c, state in guess.guess_letter_states:
+            if state == GuessLetterState.CORRECT:
+                # Transition to FOUND from any state except UNUSED
+                assert self.alphabet_states[c] != AlphabetLetterState.UNUSED
+                self.alphabet_states[c] = AlphabetLetterState.FOUND
+            elif self.alphabet_states[c] == AlphabetLetterState.NOT_GUESSED:
+                # Transition from NOT_GUESSED to any other state (except FOUND, already
+                # handled)
+                if state == GuessLetterState.ELSEWHERE:
+                    self.alphabet_states[c] = AlphabetLetterState.FOUND_ELSEWHERE
+                else:
+                    assert state == GuessLetterState.INCORRECT
+                    self.alphabet_states[c] = AlphabetLetterState.UNUSED
 
 
 class Guess:
