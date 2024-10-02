@@ -1,15 +1,22 @@
 import abc
+import collections
 import enum
 import pathlib
 import random
 import string
-from typing import ClassVar
+from typing import Any, ClassVar
 
 
 class GameState(enum.Enum):
     GUESSING = 1
     SUCCEEDED = 2
     FAILED = 3
+
+
+class GuessLetterState(enum.Enum):
+    CORRECT = 1
+    ELSEWHERE = 2
+    INCORRECT = 3
 
 
 class Game(abc.ABC):
@@ -64,7 +71,7 @@ class WordleGame(Game):
         )
         self.target = self._select_target()
 
-        self.guesses: list[str] = []
+        self.guesses: list[Guess] = []
         self.game_state = GameState.GUESSING
 
     def _load_word_dictionary(
@@ -106,7 +113,7 @@ class WordleGame(Game):
         if guess_word not in self.word_dictionary:
             raise InvalidGuessWordError(guess_word)
 
-        self.guesses.append(guess_word)
+        self.guesses.append(Guess(guess_word, self.target))
 
         if guess_word == self.target:
             self.game_state = GameState.SUCCEEDED
@@ -116,6 +123,55 @@ class WordleGame(Game):
             return True
         else:
             return False
+
+
+class Guess:
+    def __init__(self, guess_word: str, target_word: str) -> None:
+        self.target_word = target_word
+        self.guess_word = guess_word
+        self.guess_letter_states = self._get_guess_letter_states(
+            guess_word, target_word
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__qualname__}(guess_word={self.guess_word!r}, "
+            f"target_word={self.target_word!r})"
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, Guess):
+            return (
+                self.guess_word == other.guess_word
+                and self.target_word == other.target_word
+                and self.guess_letter_states == other.guess_letter_states
+            )
+        return NotImplemented
+
+    @staticmethod
+    def _get_guess_letter_states(
+        guess_word: str, target_word: str
+    ) -> list[tuple[str, GuessLetterState]]:
+        target_letter_counter = collections.Counter(target_word)
+        guess_letter_states = [(c, GuessLetterState.INCORRECT) for c in guess_word]
+
+        # First mark the correct guesses
+        for i, c in enumerate(guess_word):
+            if len(target_word) > i and target_word[i] == c:
+                guess_letter_states[i] = (c, GuessLetterState.CORRECT)
+                target_letter_counter[c] -= 1
+
+        # Now look for elsewhere guesses, including double letters
+        for i, c in enumerate(guess_word):
+            # Skip if already marked correct
+            if guess_letter_states[i][1] == GuessLetterState.CORRECT:
+                continue
+
+            if c in target_letter_counter and target_letter_counter[c] > 0:
+                guess_letter_states[i] = (c, GuessLetterState.ELSEWHERE)
+                target_letter_counter[c] -= 1
+
+        return guess_letter_states
 
 
 class InvalidDictionaryFileError(Exception):

@@ -144,7 +144,8 @@ class TestWordleGuessWord:
         return_value = wordle_game_instance.guess_word(word_list[1])
 
         assert not return_value
-        assert wordle_game_instance.guesses == [word_list[1]]
+        expected_guess = wordall.Guess(word_list[1], word_list[0])
+        assert wordle_game_instance.guesses == [expected_guess]
         assert wordle_game_instance.game_state == wordall.GameState.GUESSING
 
     def test_game_ends_when_correct_word(
@@ -158,7 +159,8 @@ class TestWordleGuessWord:
         return_value = wordle_game_instance.guess_word(word_list[0])
 
         assert return_value
-        assert wordle_game_instance.guesses == [word_list[0]]
+        expected_guess = wordall.Guess(word_list[0], word_list[0])
+        assert wordle_game_instance.guesses == [expected_guess]
         assert wordle_game_instance.game_state == wordall.GameState.SUCCEEDED  # type: ignore[comparison-overlap] # False positive, https://github.com/python/mypy/issues/17317
 
     def test_games_ends_when_guess_limit_reached(
@@ -175,7 +177,8 @@ class TestWordleGuessWord:
         return_value = wordle_game_instance.guess_word(word_list[1])
 
         assert return_value
-        assert wordle_game_instance.guesses == [word_list[1]] * 3
+        expected_guess = wordall.Guess(word_list[1], word_list[0])
+        assert wordle_game_instance.guesses == [expected_guess] * 3
         assert wordle_game_instance.game_state == wordall.GameState.FAILED  # type: ignore[comparison-overlap] # False positive, https://github.com/python/mypy/issues/17317
 
     def test_raises_exception_when_game_already_failed(
@@ -221,3 +224,178 @@ class TestWordleGuessWord:
     ) -> None:
         with pytest.raises(wordall.InvalidGuessWordError):
             wordle_game_instance_5_letter.guess_word("DONUTS")
+
+
+class TestGuess:
+    def test_equality(self) -> None:
+        assert wordall.Guess("APPLE", "BREAD") == wordall.Guess("APPLE", "BREAD")
+
+    def test_inequality_different_guess(self) -> None:
+        assert wordall.Guess("APPLE", "BREAD") != wordall.Guess("PEARS", "BREAD")
+
+    def test_inequality_different_target(self) -> None:
+        assert wordall.Guess("APPLE", "BREAD") != wordall.Guess("APPLE", "CAKES")
+
+    def test_inequality_swapped(self) -> None:
+        assert wordall.Guess("APPLE", "BREAD") != wordall.Guess("BREAD", "APPLE")
+
+    def test_inequality_different_type(self) -> None:
+        assert wordall.Guess("APPLE", "BREAD") != "APPLE"
+
+    def test_repr(self) -> None:
+        assert (
+            repr(wordall.Guess("APPLE", "BREAD"))
+            == "Guess(guess_word='APPLE', target_word='BREAD')"
+        )
+
+    def test_guess_all_correct(self) -> None:
+        guess_word_ = "APPLE"
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("A", wordall.GuessLetterState.CORRECT),
+            ("P", wordall.GuessLetterState.CORRECT),
+            ("P", wordall.GuessLetterState.CORRECT),
+            ("L", wordall.GuessLetterState.CORRECT),
+            ("E", wordall.GuessLetterState.CORRECT),
+        ]
+
+    def test_guess_all_incorrect(self) -> None:
+        guess_word_ = "SHOOT"
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("S", wordall.GuessLetterState.INCORRECT),
+            ("H", wordall.GuessLetterState.INCORRECT),
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("T", wordall.GuessLetterState.INCORRECT),
+        ]
+
+    def test_guess_elsewhere(self) -> None:
+        guess_word_ = "PALER"
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("P", wordall.GuessLetterState.ELSEWHERE),
+            ("A", wordall.GuessLetterState.ELSEWHERE),
+            ("L", wordall.GuessLetterState.ELSEWHERE),
+            ("E", wordall.GuessLetterState.ELSEWHERE),
+            ("R", wordall.GuessLetterState.INCORRECT),
+        ]
+
+    def test_guess_some_elsewhere(self) -> None:
+        guess_word_ = "PALER"
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("P", wordall.GuessLetterState.ELSEWHERE),
+            ("A", wordall.GuessLetterState.ELSEWHERE),
+            ("L", wordall.GuessLetterState.ELSEWHERE),
+            ("E", wordall.GuessLetterState.ELSEWHERE),
+            ("R", wordall.GuessLetterState.INCORRECT),
+        ]
+
+    def test_guess_double_letter_one_elsewhere(self) -> None:
+        guess_word_ = "POPOP"
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("P", wordall.GuessLetterState.ELSEWHERE),
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("P", wordall.GuessLetterState.CORRECT),
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("P", wordall.GuessLetterState.INCORRECT),
+        ]
+
+    def test_guess_double_letter_both_elsewhere(self) -> None:
+        guess_word_ = "POBOP"
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("P", wordall.GuessLetterState.ELSEWHERE),
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("B", wordall.GuessLetterState.INCORRECT),
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("P", wordall.GuessLetterState.ELSEWHERE),
+        ]
+
+    def test_guess_longer(self) -> None:
+        guess_word_ = "ABPOPPEE"
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("A", wordall.GuessLetterState.CORRECT),
+            ("B", wordall.GuessLetterState.INCORRECT),
+            ("P", wordall.GuessLetterState.CORRECT),
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("P", wordall.GuessLetterState.ELSEWHERE),
+            ("P", wordall.GuessLetterState.INCORRECT),
+            ("E", wordall.GuessLetterState.ELSEWHERE),
+            ("E", wordall.GuessLetterState.INCORRECT),
+        ]
+
+    def test_guess_shorter(self) -> None:
+        guess_word_ = "POPP"
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("P", wordall.GuessLetterState.ELSEWHERE),
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("P", wordall.GuessLetterState.CORRECT),
+            ("P", wordall.GuessLetterState.INCORRECT),
+        ]
+
+    def test_guess_empty(self) -> None:
+        guess_word_ = ""
+        target_word = "APPLE"
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == []
+
+    def test_target_empty(self) -> None:
+        guess_word_ = "OK"
+        target_word = ""
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == [
+            ("O", wordall.GuessLetterState.INCORRECT),
+            ("K", wordall.GuessLetterState.INCORRECT),
+        ]
+
+    def test_both_empty(self) -> None:
+        guess_word_ = ""
+        target_word = ""
+        guess = wordall.Guess(guess_word_, target_word)
+
+        assert guess.target_word == target_word
+        assert guess.guess_word == guess_word_
+        assert guess.guess_letter_states == []
