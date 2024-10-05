@@ -70,17 +70,18 @@ class WordleGame(Game):
         self,
         dictionary_file_path: pathlib.Path,
         guess_limit: int,
-        word_length: int | None = None,
+        target_word_length: int | None = None,
     ) -> None:
         super().__init__()
 
         self.guess_limit = guess_limit
-        self.word_length = word_length
 
         self.word_dictionary = self._load_word_dictionary(
-            dictionary_file_path, word_length=word_length
+            dictionary_file_path, word_length=target_word_length
         )
         self.target = self._select_target()
+        if target_word_length:
+            assert len(self.target) == target_word_length
 
         self.guesses: list[Guess] = []
         self.alphabet_states = {
@@ -95,6 +96,9 @@ class WordleGame(Game):
         Loads the dictionary of words from the given file. The words in the file should
         be one per line. Raises InvalidDictionaryFileError if any word does not match
         the alphabet.
+        If word_length is provided, only loads words of that length. This allows
+        limiting number of words needed in memory for game where word length is known
+        ahead of time.
         """
         with dictionary_file_path.open() as dictionary_file:
             all_words = [line_ for line in dictionary_file if (line_ := line.strip())]
@@ -125,6 +129,9 @@ class WordleGame(Game):
             raise GameAlreadyFinishedError()
 
         if guess_word not in self.word_dictionary:
+            raise InvalidGuessWordError(guess_word)
+
+        if len(guess_word) != len(self.target):
             raise InvalidGuessWordError(guess_word)
 
         guess = Guess(guess_word, self.target)

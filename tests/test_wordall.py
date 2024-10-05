@@ -94,7 +94,7 @@ class TestWordleGameInit:
         open_mock, _ = mock_valid_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordall.WordleGame(dictionary_file_path, 1, word_length=5)
+        wordle_game = wordall.WordleGame(dictionary_file_path, 1, target_word_length=5)
 
         open_mock.assert_called_once_with(dictionary_file_path)
         assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
@@ -106,7 +106,7 @@ class TestWordleGameInit:
         open_mock, _ = mock_valid_empty_line_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordall.WordleGame(dictionary_file_path, 1, word_length=5)
+        wordle_game = wordall.WordleGame(dictionary_file_path, 1, target_word_length=5)
 
         open_mock.assert_called_once_with(dictionary_file_path)
         assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
@@ -152,7 +152,7 @@ class TestWordleGuessWord:
     def wordle_game_instance_5_letter(
         self, mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]]
     ) -> wordall.WordleGame:
-        return wordall.WordleGame(pathlib.Path("/a/b/c"), 3, word_length=5)
+        return wordall.WordleGame(pathlib.Path("/a/b/c"), 3, target_word_length=5)
 
     def test_game_continues_when_incorrect_word(
         self, wordle_game_instance: wordall.WordleGame
@@ -246,11 +246,20 @@ class TestWordleGuessWord:
         with pytest.raises(wordall.InvalidGuessWordError):
             wordle_game_instance.guess_word("")
 
-    def test_raises_exception_for_wrong_length_word_guess(
+    def test_raises_exception_for_wrong_length_word_guess_length_supplied(
         self, wordle_game_instance_5_letter: wordall.WordleGame
     ) -> None:
         with pytest.raises(wordall.InvalidGuessWordError):
             wordle_game_instance_5_letter.guess_word("DONUTS")
+
+    def test_raises_exception_for_wrong_length_word_guess_length_not_supplied(
+        self, wordle_game_instance: wordall.WordleGame
+    ) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+
+        with pytest.raises(wordall.InvalidGuessWordError):
+            wordle_game_instance.guess_word("DONUTS")
 
     def test_updates_alphabet_letter_states_found(
         self, wordle_game_instance: wordall.WordleGame
