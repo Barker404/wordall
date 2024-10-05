@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 import pytest_mock
 
-from wordall import wordall
+from wordall import game
 
 
 @pytest.fixture
@@ -60,17 +60,17 @@ def _mock_dictionary_file_helper(
 
 class TestIsWordInAlphabet:
     @pytest.fixture
-    def non_abstract_game(self, mocker: pytest_mock.MockerFixture) -> wordall.Game:
+    def non_abstract_game(self, mocker: pytest_mock.MockerFixture) -> game.Game:
         # Patch Game so that we can directly create an instance without needing a
         # subclass
-        mocker.patch.multiple(wordall.Game, __abstractmethods__=set())
-        game = wordall.Game()  # type: ignore # Mypy thinks this is still abstract
-        return game
+        mocker.patch.multiple(game.Game, __abstractmethods__=set())
+        game_ = game.Game()  # type: ignore # Mypy thinks this is still abstract
+        return game_
 
-    def test_is_in_alphabet(self, non_abstract_game: wordall.Game) -> None:
+    def test_is_in_alphabet(self, non_abstract_game: game.Game) -> None:
         assert non_abstract_game.is_word_in_alphabet("BAED")
 
-    def test_not_in_alphabet(self, non_abstract_game: wordall.Game) -> None:
+    def test_not_in_alphabet(self, non_abstract_game: game.Game) -> None:
         assert not non_abstract_game.is_word_in_alphabet("AB1")
 
 
@@ -82,7 +82,7 @@ class TestWordleGameInit:
         open_mock, file_word_list = mock_valid_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordall.WordleGame(dictionary_file_path, 1)
+        wordle_game = game.WordleGame(dictionary_file_path, 1)
 
         open_mock.assert_called_once_with(dictionary_file_path)
         assert wordle_game.word_dictionary == set(file_word_list)
@@ -94,7 +94,7 @@ class TestWordleGameInit:
         open_mock, _ = mock_valid_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordall.WordleGame(dictionary_file_path, 1, target_word_length=5)
+        wordle_game = game.WordleGame(dictionary_file_path, 1, target_word_length=5)
 
         open_mock.assert_called_once_with(dictionary_file_path)
         assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
@@ -106,7 +106,7 @@ class TestWordleGameInit:
         open_mock, _ = mock_valid_empty_line_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordall.WordleGame(dictionary_file_path, 1, target_word_length=5)
+        wordle_game = game.WordleGame(dictionary_file_path, 1, target_word_length=5)
 
         open_mock.assert_called_once_with(dictionary_file_path)
         assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
@@ -115,15 +115,15 @@ class TestWordleGameInit:
         self,
         mock_invalid_character_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
-        with pytest.raises(wordall.InvalidDictionaryFileError):
-            wordall.WordleGame(pathlib.Path("/a/b/c"), 1)
+        with pytest.raises(game.InvalidDictionaryFileError):
+            game.WordleGame(pathlib.Path("/a/b/c"), 1)
 
     def test_raises_exception_on_empty_dictionary(
         self,
         mock_empty_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
-        with pytest.raises(wordall.InvalidDictionaryFileError):
-            wordall.WordleGame(pathlib.Path("/a/b/c"), 1)
+        with pytest.raises(game.InvalidDictionaryFileError):
+            game.WordleGame(pathlib.Path("/a/b/c"), 1)
 
     def test_selects_random_target(
         self,
@@ -134,7 +134,7 @@ class TestWordleGameInit:
 
         mock_choice = mocker.patch("random.choice")
 
-        wordle_game = wordall.WordleGame(pathlib.Path("/a/b/c"), 0)
+        wordle_game = game.WordleGame(pathlib.Path("/a/b/c"), 0)
 
         mock_choice.assert_called_once_with(list(set(file_word_list)))
         assert wordle_game.target == mock_choice.return_value
@@ -145,65 +145,65 @@ class TestWordleGuessWord:
     def wordle_game_instance(
         self,
         mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
-    ) -> wordall.WordleGame:
-        return wordall.WordleGame(pathlib.Path("/a/b/c"), 3)
+    ) -> game.WordleGame:
+        return game.WordleGame(pathlib.Path("/a/b/c"), 3)
 
     @pytest.fixture
     def wordle_game_instance_5_letter(
         self, mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]]
-    ) -> wordall.WordleGame:
-        return wordall.WordleGame(pathlib.Path("/a/b/c"), 3, target_word_length=5)
+    ) -> game.WordleGame:
+        return game.WordleGame(pathlib.Path("/a/b/c"), 3, target_word_length=5)
 
     def test_game_continues_when_incorrect_word(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
         assert wordle_game_instance.guesses == []
-        assert wordle_game_instance.game_state == wordall.GameState.GUESSING
+        assert wordle_game_instance.game_state == game.GameState.GUESSING
 
         return_value = wordle_game_instance.guess_word("BREAD")
 
         assert not return_value
-        expected_guess = wordall.Guess("BREAD", "APPLE")
+        expected_guess = game.Guess("BREAD", "APPLE")
         assert wordle_game_instance.guesses == [expected_guess]
-        assert wordle_game_instance.game_state == wordall.GameState.GUESSING
+        assert wordle_game_instance.game_state == game.GameState.GUESSING
 
     def test_game_ends_when_correct_word(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
         assert wordle_game_instance.guesses == []
-        assert wordle_game_instance.game_state == wordall.GameState.GUESSING
+        assert wordle_game_instance.game_state == game.GameState.GUESSING
 
         return_value = wordle_game_instance.guess_word("APPLE")
 
         assert return_value
-        expected_guess = wordall.Guess("APPLE", "APPLE")
+        expected_guess = game.Guess("APPLE", "APPLE")
         assert wordle_game_instance.guesses == [expected_guess]
-        assert wordle_game_instance.game_state == wordall.GameState.SUCCEEDED  # type: ignore[comparison-overlap] # False positive, https://github.com/python/mypy/issues/17317
+        assert wordle_game_instance.game_state == game.GameState.SUCCEEDED  # type: ignore[comparison-overlap] # False positive, https://github.com/python/mypy/issues/17317
 
     def test_games_ends_when_guess_limit_reached(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
         assert wordle_game_instance.guesses == []
         assert wordle_game_instance.guess_limit == 3
-        assert wordle_game_instance.game_state == wordall.GameState.GUESSING
+        assert wordle_game_instance.game_state == game.GameState.GUESSING
 
         wordle_game_instance.guess_word("BREAD")
         wordle_game_instance.guess_word("BREAD")
         return_value = wordle_game_instance.guess_word("BREAD")
 
         assert return_value
-        expected_guess = wordall.Guess("BREAD", "APPLE")
+        expected_guess = game.Guess("BREAD", "APPLE")
         assert wordle_game_instance.guesses == [expected_guess] * 3
-        assert wordle_game_instance.game_state == wordall.GameState.FAILED  # type: ignore[comparison-overlap] # False positive, https://github.com/python/mypy/issues/17317
+        assert wordle_game_instance.game_state == game.GameState.FAILED  # type: ignore[comparison-overlap] # False positive, https://github.com/python/mypy/issues/17317
 
     def test_raises_exception_when_game_already_failed(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
@@ -213,11 +213,11 @@ class TestWordleGuessWord:
         wordle_game_instance.guess_word("BREAD")
         wordle_game_instance.guess_word("BREAD")
         wordle_game_instance.guess_word("BREAD")
-        with pytest.raises(wordall.GameAlreadyFinishedError):
+        with pytest.raises(game.GameAlreadyFinishedError):
             wordle_game_instance.guess_word("BREAD")
 
     def test_raises_exception_when_game_already_succeeded(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
@@ -225,44 +225,44 @@ class TestWordleGuessWord:
         assert wordle_game_instance.guess_limit == 3
 
         wordle_game_instance.guess_word("APPLE")
-        with pytest.raises(wordall.GameAlreadyFinishedError):
+        with pytest.raises(game.GameAlreadyFinishedError):
             wordle_game_instance.guess_word("BREAD")
 
     def test_raises_exception_for_non_alphabet_guess(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
-        with pytest.raises(wordall.InvalidGuessWordError):
+        with pytest.raises(game.InvalidGuessWordError):
             wordle_game_instance.guess_word("ABCD5")
 
     def test_raises_exception_for_invalid_word_guess(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
-        with pytest.raises(wordall.InvalidGuessWordError):
+        with pytest.raises(game.InvalidGuessWordError):
             wordle_game_instance.guess_word("BREAG")
 
     def test_raises_exception_for_empty_word_guess(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
-        with pytest.raises(wordall.InvalidGuessWordError):
+        with pytest.raises(game.InvalidGuessWordError):
             wordle_game_instance.guess_word("")
 
     def test_raises_exception_for_wrong_length_word_guess_length_supplied(
-        self, wordle_game_instance_5_letter: wordall.WordleGame
+        self, wordle_game_instance_5_letter: game.WordleGame
     ) -> None:
-        with pytest.raises(wordall.InvalidGuessWordError):
+        with pytest.raises(game.InvalidGuessWordError):
             wordle_game_instance_5_letter.guess_word("DONUTS")
 
     def test_raises_exception_for_wrong_length_word_guess_length_not_supplied(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
 
-        with pytest.raises(wordall.InvalidGuessWordError):
+        with pytest.raises(game.InvalidGuessWordError):
             wordle_game_instance.guess_word("DONUTS")
 
     def test_updates_alphabet_letter_states_found(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
@@ -271,20 +271,20 @@ class TestWordleGuessWord:
         wordle_game_instance.guess_word("AAAAA")
 
         expected_alphabet_state = {
-            c: wordall.AlphabetLetterState.NOT_GUESSED
+            c: game.AlphabetLetterState.NOT_GUESSED
             for c in wordle_game_instance.ALPHABET
         }
-        expected_alphabet_state["A"] = wordall.AlphabetLetterState.FOUND
+        expected_alphabet_state["A"] = game.AlphabetLetterState.FOUND
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
         wordle_game_instance.word_dictionary.add("XXXXA")
         wordle_game_instance.guess_word("XXXXA")
 
-        expected_alphabet_state["X"] = wordall.AlphabetLetterState.UNUSED
+        expected_alphabet_state["X"] = game.AlphabetLetterState.UNUSED
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
     def test_updates_alphabet_letter_states_found_one_of_two(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
@@ -293,15 +293,15 @@ class TestWordleGuessWord:
         wordle_game_instance.guess_word("XPXXX")
 
         expected_alphabet_state = {
-            c: wordall.AlphabetLetterState.NOT_GUESSED
+            c: game.AlphabetLetterState.NOT_GUESSED
             for c in wordle_game_instance.ALPHABET
         }
-        expected_alphabet_state["P"] = wordall.AlphabetLetterState.FOUND
-        expected_alphabet_state["X"] = wordall.AlphabetLetterState.UNUSED
+        expected_alphabet_state["P"] = game.AlphabetLetterState.FOUND
+        expected_alphabet_state["X"] = game.AlphabetLetterState.UNUSED
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
     def test_updates_alphabet_letter_states_unused(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
@@ -310,14 +310,14 @@ class TestWordleGuessWord:
         wordle_game_instance.guess_word("XXXXX")
 
         expected_alphabet_state = {
-            c: wordall.AlphabetLetterState.NOT_GUESSED
+            c: game.AlphabetLetterState.NOT_GUESSED
             for c in wordle_game_instance.ALPHABET
         }
-        expected_alphabet_state["X"] = wordall.AlphabetLetterState.UNUSED
+        expected_alphabet_state["X"] = game.AlphabetLetterState.UNUSED
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
     def test_updates_alphabet_letter_states_elsewhere(
-        self, wordle_game_instance: wordall.WordleGame
+        self, wordle_game_instance: game.WordleGame
     ) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
@@ -326,168 +326,168 @@ class TestWordleGuessWord:
         wordle_game_instance.guess_word("XXXXA")
 
         expected_alphabet_state = {
-            c: wordall.AlphabetLetterState.NOT_GUESSED
+            c: game.AlphabetLetterState.NOT_GUESSED
             for c in wordle_game_instance.ALPHABET
         }
-        expected_alphabet_state["A"] = wordall.AlphabetLetterState.FOUND_ELSEWHERE
-        expected_alphabet_state["X"] = wordall.AlphabetLetterState.UNUSED
+        expected_alphabet_state["A"] = game.AlphabetLetterState.FOUND_ELSEWHERE
+        expected_alphabet_state["X"] = game.AlphabetLetterState.UNUSED
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
         wordle_game_instance.word_dictionary.add("AXXXX")
         wordle_game_instance.guess_word("AXXXX")
 
-        expected_alphabet_state["A"] = wordall.AlphabetLetterState.FOUND
+        expected_alphabet_state["A"] = game.AlphabetLetterState.FOUND
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
 
 class TestGuess:
     def test_equality(self) -> None:
-        assert wordall.Guess("APPLE", "BREAD") == wordall.Guess("APPLE", "BREAD")
+        assert game.Guess("APPLE", "BREAD") == game.Guess("APPLE", "BREAD")
 
     def test_inequality_different_guess(self) -> None:
-        assert wordall.Guess("APPLE", "BREAD") != wordall.Guess("PEARS", "BREAD")
+        assert game.Guess("APPLE", "BREAD") != game.Guess("PEARS", "BREAD")
 
     def test_inequality_different_target(self) -> None:
-        assert wordall.Guess("APPLE", "BREAD") != wordall.Guess("APPLE", "CAKES")
+        assert game.Guess("APPLE", "BREAD") != game.Guess("APPLE", "CAKES")
 
     def test_inequality_swapped(self) -> None:
-        assert wordall.Guess("APPLE", "BREAD") != wordall.Guess("BREAD", "APPLE")
+        assert game.Guess("APPLE", "BREAD") != game.Guess("BREAD", "APPLE")
 
     def test_inequality_different_type(self) -> None:
-        assert wordall.Guess("APPLE", "BREAD") != "APPLE"
+        assert game.Guess("APPLE", "BREAD") != "APPLE"
 
     def test_repr(self) -> None:
         assert (
-            repr(wordall.Guess("APPLE", "BREAD"))
+            repr(game.Guess("APPLE", "BREAD"))
             == "Guess(guess_word='APPLE', target_word='BREAD')"
         )
 
     def test_guess_all_correct(self) -> None:
         guess_word_ = "APPLE"
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("A", wordall.GuessLetterState.CORRECT),
-            ("P", wordall.GuessLetterState.CORRECT),
-            ("P", wordall.GuessLetterState.CORRECT),
-            ("L", wordall.GuessLetterState.CORRECT),
-            ("E", wordall.GuessLetterState.CORRECT),
+            ("A", game.GuessLetterState.CORRECT),
+            ("P", game.GuessLetterState.CORRECT),
+            ("P", game.GuessLetterState.CORRECT),
+            ("L", game.GuessLetterState.CORRECT),
+            ("E", game.GuessLetterState.CORRECT),
         ]
 
     def test_guess_all_incorrect(self) -> None:
         guess_word_ = "SHOOT"
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("S", wordall.GuessLetterState.INCORRECT),
-            ("H", wordall.GuessLetterState.INCORRECT),
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("T", wordall.GuessLetterState.INCORRECT),
+            ("S", game.GuessLetterState.INCORRECT),
+            ("H", game.GuessLetterState.INCORRECT),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("T", game.GuessLetterState.INCORRECT),
         ]
 
     def test_guess_elsewhere(self) -> None:
         guess_word_ = "PALER"
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("P", wordall.GuessLetterState.ELSEWHERE),
-            ("A", wordall.GuessLetterState.ELSEWHERE),
-            ("L", wordall.GuessLetterState.ELSEWHERE),
-            ("E", wordall.GuessLetterState.ELSEWHERE),
-            ("R", wordall.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.ELSEWHERE),
+            ("A", game.GuessLetterState.ELSEWHERE),
+            ("L", game.GuessLetterState.ELSEWHERE),
+            ("E", game.GuessLetterState.ELSEWHERE),
+            ("R", game.GuessLetterState.INCORRECT),
         ]
 
     def test_guess_some_elsewhere(self) -> None:
         guess_word_ = "PALER"
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("P", wordall.GuessLetterState.ELSEWHERE),
-            ("A", wordall.GuessLetterState.ELSEWHERE),
-            ("L", wordall.GuessLetterState.ELSEWHERE),
-            ("E", wordall.GuessLetterState.ELSEWHERE),
-            ("R", wordall.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.ELSEWHERE),
+            ("A", game.GuessLetterState.ELSEWHERE),
+            ("L", game.GuessLetterState.ELSEWHERE),
+            ("E", game.GuessLetterState.ELSEWHERE),
+            ("R", game.GuessLetterState.INCORRECT),
         ]
 
     def test_guess_double_letter_one_elsewhere(self) -> None:
         guess_word_ = "POPOP"
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("P", wordall.GuessLetterState.ELSEWHERE),
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("P", wordall.GuessLetterState.CORRECT),
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("P", wordall.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.ELSEWHERE),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.CORRECT),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.INCORRECT),
         ]
 
     def test_guess_double_letter_both_elsewhere(self) -> None:
         guess_word_ = "POBOP"
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("P", wordall.GuessLetterState.ELSEWHERE),
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("B", wordall.GuessLetterState.INCORRECT),
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("P", wordall.GuessLetterState.ELSEWHERE),
+            ("P", game.GuessLetterState.ELSEWHERE),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("B", game.GuessLetterState.INCORRECT),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.ELSEWHERE),
         ]
 
     def test_guess_longer(self) -> None:
         guess_word_ = "ABPOPPEE"
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("A", wordall.GuessLetterState.CORRECT),
-            ("B", wordall.GuessLetterState.INCORRECT),
-            ("P", wordall.GuessLetterState.CORRECT),
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("P", wordall.GuessLetterState.ELSEWHERE),
-            ("P", wordall.GuessLetterState.INCORRECT),
-            ("E", wordall.GuessLetterState.ELSEWHERE),
-            ("E", wordall.GuessLetterState.INCORRECT),
+            ("A", game.GuessLetterState.CORRECT),
+            ("B", game.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.CORRECT),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.ELSEWHERE),
+            ("P", game.GuessLetterState.INCORRECT),
+            ("E", game.GuessLetterState.ELSEWHERE),
+            ("E", game.GuessLetterState.INCORRECT),
         ]
 
     def test_guess_shorter(self) -> None:
         guess_word_ = "POPP"
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("P", wordall.GuessLetterState.ELSEWHERE),
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("P", wordall.GuessLetterState.CORRECT),
-            ("P", wordall.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.ELSEWHERE),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("P", game.GuessLetterState.CORRECT),
+            ("P", game.GuessLetterState.INCORRECT),
         ]
 
     def test_guess_empty(self) -> None:
         guess_word_ = ""
         target_word = "APPLE"
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
@@ -496,19 +496,19 @@ class TestGuess:
     def test_target_empty(self) -> None:
         guess_word_ = "OK"
         target_word = ""
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
         assert guess.guess_letter_states == [
-            ("O", wordall.GuessLetterState.INCORRECT),
-            ("K", wordall.GuessLetterState.INCORRECT),
+            ("O", game.GuessLetterState.INCORRECT),
+            ("K", game.GuessLetterState.INCORRECT),
         ]
 
     def test_both_empty(self) -> None:
         guess_word_ = ""
         target_word = ""
-        guess = wordall.Guess(guess_word_, target_word)
+        guess = game.Guess(guess_word_, target_word)
 
         assert guess.target_word == target_word
         assert guess.guess_word == guess_word_
