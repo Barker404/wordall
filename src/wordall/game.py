@@ -158,16 +158,24 @@ class WordleGame(Game):
         """
         for c, state in guess.guess_letter_states:
             if state == GuessLetterState.CORRECT:
-                # Transition to FOUND from any state except UNUSED
-                assert self.alphabet_states[c] != AlphabetLetterState.UNUSED
+                # Transition to FOUND from any state. Could even transition from UNUSED
+                # if the letter was already guessed incorrectly in this word.
                 self.alphabet_states[c] = AlphabetLetterState.FOUND
-            elif self.alphabet_states[c] == AlphabetLetterState.NOT_GUESSED:
-                # Transition from NOT_GUESSED to any other state (except FOUND, already
-                # handled)
-                if state == GuessLetterState.ELSEWHERE:
+            elif state == GuessLetterState.ELSEWHERE:
+                if self.alphabet_states[c] != AlphabetLetterState.FOUND:
+                    # Transition to FOUND_ELSEWHERE from any state except FOUND.
+                    # In theory it shouldn't be possible to transition from UNUSED,
+                    # because ELSEWHERE should always come before INCORRECT on the same
+                    # letter.
+                    assert self.alphabet_states[c] != AlphabetLetterState.UNUSED
                     self.alphabet_states[c] = AlphabetLetterState.FOUND_ELSEWHERE
-                else:
-                    assert state == GuessLetterState.INCORRECT
+            else:
+                assert state == GuessLetterState.INCORRECT
+                if self.alphabet_states[c] == AlphabetLetterState.NOT_GUESSED:
+                    # Transition from NOT_GUESSED to UNUSED. A guess letter could be
+                    # INCORRECT without the alphabet letter being UNUSED if the letter
+                    # is in the guess word multiple times. If the alphabet letter is
+                    # still UNUSED by the end of the update, it really is UNUSED.
                     self.alphabet_states[c] = AlphabetLetterState.UNUSED
 
 

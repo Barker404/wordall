@@ -339,6 +339,23 @@ class TestWordleGuessWord:
         expected_alphabet_state["A"] = game.AlphabetLetterState.FOUND
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
+    def test_updates_alphabet_letter_states_second_of_double_correct(
+        self, wordle_game_instance: game.WordleGame
+    ) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+
+        wordle_game_instance.word_dictionary.add("EXXXE")
+        wordle_game_instance.guess_word("EXXXE")
+
+        expected_alphabet_state = {
+            c: game.AlphabetLetterState.NOT_GUESSED
+            for c in wordle_game_instance.ALPHABET
+        }
+        expected_alphabet_state["E"] = game.AlphabetLetterState.FOUND
+        expected_alphabet_state["X"] = game.AlphabetLetterState.UNUSED
+        assert wordle_game_instance.alphabet_states == expected_alphabet_state
+
 
 class TestGuess:
     def test_equality(self) -> None:
