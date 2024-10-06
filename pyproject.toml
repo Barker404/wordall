@@ -23,6 +23,11 @@ dev = [
     "textual-dev",
 ]
 
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+]
+
 # Ruff is configured here but installed via pre-commit
 [tool.ruff.lint]
 select = [
