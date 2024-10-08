@@ -2,6 +2,7 @@ import pathlib
 from typing import Any, ClassVar, cast
 
 from rich import text
+from textual import on
 from textual.app import App, ComposeResult, RenderResult
 from textual.containers import ScrollableContainer
 from textual.reactive import Reactive, reactive
@@ -27,9 +28,25 @@ class WordallApp(App[None]):
             yield WordleGuessesDisplay().data_bind(WordallApp.game_)
             yield WordleAlphabetDisplay().data_bind(WordallApp.game_)
             yield GuessInput().data_bind(WordallApp.game_)
-            yield Label()
+            yield Label(id="game_messages")
             yield StatusDisplay().data_bind(WordallApp.game_)
         yield Footer()
+
+    @on(Input.Submitted, "GuessInput")
+    def guess_word(self, event: Input.Submitted) -> None:
+        assert self.game_ is not None
+
+        label = self.query_exactly_one("#game_messages", Label)
+
+        try:
+            self.game_.guess_word(event.value.upper())
+        except game.InvalidGuessWordError as e:
+            label.update(f"ERROR: {e}")
+            return
+
+        label.update(f"Guessed {event.value}")
+        self.mutate_reactive(WordallApp.game_)
+        event.input.clear()
 
 
 class UnfocusableScrollableContainer(ScrollableContainer, can_focus=False):
@@ -112,24 +129,6 @@ class GuessInput(Input):
 
     def on_mount(self) -> None:
         self.focus()
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        assert self.game_ is not None
-
-        # TODO: This is a bit awkward, can we do it without relying on knowledge of the
-        # parent app? Maybe this can be implemented on the app, or a specific message
-        # can be sent up after the guess?
-        label = self.app.query_exactly_one(Label)
-
-        try:
-            self.game_.guess_word(event.value.upper())
-        except game.InvalidGuessWordError as e:
-            label.update(f"ERROR: {e}")
-            return
-
-        label.update(f"Guessed {event.value}")
-        self.app.mutate_reactive(WordallApp.game_)
-        self.clear()
 
 
 class StatusDisplay(Static):
