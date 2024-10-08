@@ -6,6 +6,7 @@ from textual import on
 from textual.app import App, ComposeResult, RenderResult
 from textual.containers import ScrollableContainer
 from textual.reactive import Reactive, reactive
+from textual.validation import ValidationResult, Validator
 from textual.widgets import Footer, Header, Input, Label, Static
 
 from wordall import game
@@ -23,11 +24,13 @@ class WordallApp(App[None]):
         return game.WordleGame(pathlib.Path("dict_long.txt"), 5, target_word_length=4)
 
     def compose(self) -> ComposeResult:
+        assert self.game_ is not None
+
         yield Header()
         with UnfocusableScrollableContainer():
             yield WordleGuessesDisplay().data_bind(WordallApp.game_)
             yield WordleAlphabetDisplay().data_bind(WordallApp.game_)
-            yield GuessInput().data_bind(WordallApp.game_)
+            yield GuessInput(validators=ValidGuessWord(self.game_))
             yield Label(id="game_messages")
             yield StatusDisplay().data_bind(WordallApp.game_)
         yield Footer()
@@ -38,6 +41,10 @@ class WordallApp(App[None]):
 
         label = self.query_exactly_one("#game_messages", Label)
 
+        if event.validation_result is not None and not event.validation_result.is_valid:
+            label.update(f"Invalid guess: {event.value}")
+            return
+
         try:
             self.game_.guess_word(event.value.upper())
         except game.InvalidGuessWordError as e:
@@ -47,6 +54,18 @@ class WordallApp(App[None]):
         label.update(f"Guessed {event.value}")
         self.mutate_reactive(WordallApp.game_)
         event.input.clear()
+
+
+class ValidGuessWord(Validator):
+    def __init__(self, game_: game.Game) -> None:
+        self.game_ = game_
+
+    def validate(self, value: str) -> ValidationResult:
+        """Check a string is equal to its reverse."""
+        if self.game_.is_valid_word(value.upper()):
+            return self.success()
+        else:
+            return self.failure("Invalid guess")
 
 
 class UnfocusableScrollableContainer(ScrollableContainer, can_focus=False):
@@ -125,8 +144,6 @@ class WordleAlphabetDisplay(Static):
 
 
 class GuessInput(Input):
-    game_: Reactive[game.Game | None] = reactive(None)
-
     def on_mount(self) -> None:
         self.focus()
 
