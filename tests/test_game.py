@@ -58,6 +58,20 @@ def _mock_dictionary_file_helper(
     return open_mock, word_list
 
 
+@pytest.fixture
+def wordle_game_instance(
+    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
+) -> game.WordleGame:
+    return game.WordleGame(pathlib.Path("/a/b/c"), 3)
+
+
+@pytest.fixture
+def wordle_game_instance_5_letter(
+    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
+) -> game.WordleGame:
+    return game.WordleGame(pathlib.Path("/a/b/c"), 3, target_word_length=5)
+
+
 class TestIsWordInAlphabet:
     @pytest.fixture
     def non_abstract_game(self, mocker: pytest_mock.MockerFixture) -> game.Game:
@@ -141,19 +155,6 @@ class TestWordleGameInit:
 
 
 class TestWordleGuessWord:
-    @pytest.fixture
-    def wordle_game_instance(
-        self,
-        mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
-    ) -> game.WordleGame:
-        return game.WordleGame(pathlib.Path("/a/b/c"), 3)
-
-    @pytest.fixture
-    def wordle_game_instance_5_letter(
-        self, mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]]
-    ) -> game.WordleGame:
-        return game.WordleGame(pathlib.Path("/a/b/c"), 3, target_word_length=5)
-
     def test_game_continues_when_incorrect_word(
         self, wordle_game_instance: game.WordleGame
     ) -> None:
@@ -355,6 +356,40 @@ class TestWordleGuessWord:
         expected_alphabet_state["E"] = game.AlphabetLetterState.FOUND
         expected_alphabet_state["X"] = game.AlphabetLetterState.UNUSED
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
+
+
+class TestWorldIsValidWord:
+    def test_accepts_valid_word(self, wordle_game_instance: game.WordleGame) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+        assert wordle_game_instance.is_valid_word("APPLE")
+
+    def test_rejects_invalid_word(self, wordle_game_instance: game.WordleGame) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+        assert not wordle_game_instance.is_valid_word("ABCDE")
+
+    def test_rejects_wrong_length_word(
+        self, wordle_game_instance: game.WordleGame
+    ) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+        assert not wordle_game_instance.is_valid_word("CAR")
+
+    def test_accepts_valid_word_specific_length(
+        self, wordle_game_instance_5_letter: game.WordleGame
+    ) -> None:
+        assert wordle_game_instance_5_letter.is_valid_word("APPLE")
+
+    def test_rejects_invalid_word_specific_length(
+        self, wordle_game_instance_5_letter: game.WordleGame
+    ) -> None:
+        assert not wordle_game_instance_5_letter.is_valid_word("ABCDE")
+
+    def test_rejects_wrong_length_word_specific_length(
+        self, wordle_game_instance_5_letter: game.WordleGame
+    ) -> None:
+        assert not wordle_game_instance_5_letter.is_valid_word("CAR")
 
 
 class TestGuess:

@@ -60,6 +60,13 @@ class Game(abc.ABC):
         """Returns True if the given word is entirely made from the game alphabet."""
         return all(c in cls.ALPHABET for c in word)
 
+    @abc.abstractmethod
+    def is_valid_word(self, word: str) -> bool:
+        """
+        Returns True if the given word is valid for this game i.e. would be accepted
+        as a guess.
+        """
+
 
 class WordleGame(Game):
     """
@@ -128,10 +135,7 @@ class WordleGame(Game):
         if self.game_state != GameState.GUESSING:
             raise GameAlreadyFinishedError()
 
-        if guess_word not in self.word_dictionary:
-            raise InvalidGuessWordError(guess_word)
-
-        if len(guess_word) != len(self.target):
+        if not self.is_valid_word(guess_word):
             raise InvalidGuessWordError(guess_word)
 
         guess = Guess(guess_word, self.target)
@@ -177,6 +181,9 @@ class WordleGame(Game):
                     # is in the guess word multiple times. If the alphabet letter is
                     # still UNUSED by the end of the update, it really is UNUSED.
                     self.alphabet_states[c] = AlphabetLetterState.UNUSED
+
+    def is_valid_word(self, word: str) -> bool:
+        return word in self.word_dictionary and len(word) == len(self.target)
 
 
 class Guess:
