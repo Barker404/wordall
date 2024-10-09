@@ -1,0 +1,19 @@
+WordleGuessesDisplay {
+    margin: 1;
+}
+
+WordleAlphabetDisplay {
+    margin: 1;
+}
+
+GuessInput {
+    padding: 0;
+    margin: 1;
+    border: none;
+    width: 100%;
+    height: auto;
+
+    &.-valid {
+        color: green;
+    }
+}

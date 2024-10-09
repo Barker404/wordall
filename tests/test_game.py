@@ -358,7 +358,7 @@ class TestWordleGuessWord:
         assert wordle_game_instance.alphabet_states == expected_alphabet_state
 
 
-class TestWorldIsValidWord:
+class TestWordleIsValidWord:
     def test_accepts_valid_word(self, wordle_game_instance: game.WordleGame) -> None:
         assert "APPLE" in wordle_game_instance.word_dictionary
         wordle_game_instance.target = "APPLE"
@@ -390,6 +390,20 @@ class TestWorldIsValidWord:
         self, wordle_game_instance_5_letter: game.WordleGame
     ) -> None:
         assert not wordle_game_instance_5_letter.is_valid_word("CAR")
+
+
+class TestWordleMaxGuessWordLength:
+    def test_correct_when_length_not_set(
+        self, wordle_game_instance: game.WordleGame
+    ) -> None:
+        assert "APPLE" in wordle_game_instance.word_dictionary
+        wordle_game_instance.target = "APPLE"
+        assert wordle_game_instance.max_guess_word_length == 5
+
+    def test_correct_when_length_set(
+        self, wordle_game_instance_5_letter: game.WordleGame
+    ) -> None:
+        assert wordle_game_instance_5_letter.max_guess_word_length == 5
 
 
 class TestGuess:

@@ -67,6 +67,14 @@ class Game(abc.ABC):
         as a guess.
         """
 
+    @property
+    @abc.abstractmethod
+    def max_guess_word_length(self) -> int | None:
+        """
+        Returns the game's maximum length for valid guess inputs, if it has one.
+        Otherwise returns None.
+        """
+
 
 class WordleGame(Game):
     """
@@ -184,6 +192,10 @@ class WordleGame(Game):
 
     def is_valid_word(self, word: str) -> bool:
         return word in self.word_dictionary and len(word) == len(self.target)
+
+    @property
+    def max_guess_word_length(self) -> int | None:
+        return len(self.target)
 
 
 class Guess:
