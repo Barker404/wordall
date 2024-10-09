@@ -9,7 +9,7 @@ description = ""
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "textual", # Not used, but here to make environment testing easier until other dependency exists
+    "textual",
 ]
 
 [project.optional-dependencies]
