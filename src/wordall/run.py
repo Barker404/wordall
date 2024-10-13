@@ -4,6 +4,7 @@ from typing import Any, ClassVar, cast
 from rich import text
 from textual import on
 from textual.app import App, ComposeResult, RenderResult
+from textual.binding import Binding, BindingType
 from textual.containers import ScrollableContainer
 from textual.reactive import Reactive, reactive
 from textual.validation import ValidationResult, Validator
@@ -14,6 +15,8 @@ from wordall import game
 
 
 class WordallApp(App[None]):
+    BINDINGS: ClassVar[list[BindingType]] = [Binding("ctrl+n", "new_game", "New Game")]
+
     CSS_PATH = "run.tcss"
 
     game_: Reactive[game.Game | None] = reactive(None)
@@ -37,7 +40,7 @@ class WordallApp(App[None]):
                 validators=ValidGuessWord(self.game_),
             )
             yield WordleAlphabetDisplay().data_bind(WordallApp.game_)
-            yield Label(id="game_messages")
+            yield Label("New Game Started.", id="game_messages")
             yield StatusDisplay().data_bind(WordallApp.game_)
         yield Footer()
 
@@ -64,6 +67,10 @@ class WordallApp(App[None]):
         if game_ended:
             container = self.query_exactly_one(UnfocusableScrollableContainer)
             container.mount(WordleTargetDisplay().data_bind(WordallApp.game_))
+
+    def action_new_game(self) -> None:
+        self.game_ = self.get_game()
+        self.refresh(recompose=True)
 
 
 class ValidGuessWord(Validator):
