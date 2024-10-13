@@ -47,6 +47,7 @@ class WordallApp(App[None]):
     @on(Input.Submitted, "GuessInput")
     def guess_word(self, event: Input.Submitted) -> None:
         assert self.game_ is not None
+        assert self.game_.game_state == game.GameState.GUESSING
 
         label = self.query_exactly_one("#game_messages", Label)
 
@@ -67,6 +68,8 @@ class WordallApp(App[None]):
         if game_ended:
             container = self.query_exactly_one(UnfocusableScrollableContainer)
             container.mount(WordleTargetDisplay().data_bind(WordallApp.game_))
+            event.input.disabled = True
+            self.is_game_over = True
 
     def action_new_game(self) -> None:
         self.game_ = self.get_game()
