@@ -52,14 +52,18 @@ class WordallApp(App[None]):
             return
 
         try:
-            self.game_.guess_word(event.value.upper())
+            game_ended = self.game_.guess_word(event.value.upper())
         except game.InvalidGuessWordError as e:
             label.update(f"ERROR: {e}")
             return
 
-        label.update(f"Guessed {event.value}")
+        label.update(f"Guessed: {event.value}")
         self.mutate_reactive(WordallApp.game_)
         event.input.clear()
+
+        if game_ended:
+            container = self.query_exactly_one(UnfocusableScrollableContainer)
+            container.mount(WordleTargetDisplay().data_bind(WordallApp.game_))
 
 
 class ValidGuessWord(Validator):
@@ -217,12 +221,27 @@ class InputSpacingWrapper:
 
 
 class StatusDisplay(Static):
+    game_state_to_message: ClassVar[dict[game.GameState, str]] = {
+        game.GameState.GUESSING: "Make a guess.",
+        game.GameState.FAILED: "You lost, too bad.",
+        game.GameState.SUCCEEDED: "Congratulations, you won!",
+    }
+
     game_: Reactive[game.Game | None] = reactive(None)
 
     def render(self) -> RenderResult:
         assert self.game_ is not None
 
-        return f"The game state is {self.game_.game_state.name}"
+        return self.game_state_to_message[self.game_.game_state]
+
+
+class WordleTargetDisplay(Static):
+    game_: Reactive[game.WordleGame | None] = reactive(None)
+
+    def render(self) -> RenderResult:
+        assert self.game_ is not None
+
+        return f"The correct answer was: {self.game_.target}."
 
 
 if __name__ == "__main__":
