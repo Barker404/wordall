@@ -1,5 +1,14 @@
 # wordall
 
+Wordall is intended to be a flexible Python-based implementation of word-guessing games
+such as Wordle and Quordle. It should be possible to implement different games and run
+them within the same framework and text-based user interface, and to configure games
+with different word lengths, guess numbers, etc.
+
+The intention of this project is primarily to practice and learn more about python
+packaging and development tools - the wordle game is a fun vehicle for that. The
+text-based user interface is also an interesting new concept for me.
+
 ## Development setup
 All examples for ubuntu
 
@@ -49,11 +58,11 @@ python -m build
 ### Run tests
 After activating an environment with dev dependencies:
 ```
-pytest --cov=src tests/
+pytest --cov-report term-missing --cov=src tests/
 ```
 
 ### Formatting, linting, and type-checking
-Pytheon formatting and linting are done using ruff for python. Shell script formatting
+Python formatting and linting are done using ruff for python. Shell script formatting
 uses shfmt and linting uses shellcheck. Both are managed via pre-commit. Type-checking
 is done using mypy, which is installed in the venv (outside of pre-commit's isolated
 venv) and run by pre-commit (for reasons see
