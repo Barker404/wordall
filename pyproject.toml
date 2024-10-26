@@ -18,6 +18,7 @@ dev = [
     "pip-tools",
     "pre-commit",
     "pytest",
+    "pytest-asyncio",
     "pytest-cov",
     "pytest-mock",
     "textual-dev",
@@ -27,6 +28,10 @@ dev = [
 exclude_also = [
     "if TYPE_CHECKING:",
 ]
+
+[tool.pytest.ini_options]
+# Use future default value to supress warning
+asyncio_default_fixture_loop_scope = "function"
 
 # Ruff is configured here but installed via pre-commit
 [tool.ruff.lint]

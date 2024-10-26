@@ -57,7 +57,9 @@ class WordallApp(App[None]):
 
         try:
             game_ended = self.game_.guess_word(event.value.upper())
-        except game.InvalidGuessWordError as e:
+        except (
+            game.InvalidGuessWordError
+        ) as e:  # pragma: no cover  # Not possible normally
             label.update(f"ERROR: {e}")
             return
 
@@ -254,6 +256,6 @@ class WordleTargetDisplay(Static):
         return f"The correct answer was: {self.game_.target}."
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     app = WordallApp()
     app.run()
