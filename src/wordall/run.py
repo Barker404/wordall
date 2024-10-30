@@ -12,6 +12,7 @@ from textual.widgets import Footer, Header, Input, Label, Static
 from textual.widgets._input import _InputRenderable
 
 from wordall import game
+from wordall.games import wordle
 
 
 class WordallApp(App[None]):
@@ -27,7 +28,7 @@ class WordallApp(App[None]):
 
     def get_game(self) -> game.Game:
         # TODO: Should probably be an injected factory
-        return game.WordleGame(pathlib.Path("dict_long.txt"), 5, target_word_length=4)
+        return wordle.WordleGame(pathlib.Path("dict_long.txt"), 5, target_word_length=4)
 
     def compose(self) -> ComposeResult:
         assert self.game_ is not None
@@ -95,13 +96,13 @@ class UnfocusableScrollableContainer(ScrollableContainer, can_focus=False):
 
 
 class WordleGuessesDisplay(Static):
-    game_: Reactive[game.WordleGame | None] = reactive(None)
+    game_: Reactive[wordle.WordleGame | None] = reactive(None)
 
     def compose(self) -> ComposeResult:
         # At compose time reactive game has been data bound, but not yet updated to
         # match parent version. So instead we use a hack to directly access the game on
         # the app.
-        game_ = cast(game.WordleGame, cast(WordallApp, self.app).game_)
+        game_ = cast(wordle.WordleGame, cast(WordallApp, self.app).game_)
         for i in range(game_.guess_limit):
             yield WordleGuessDisplay(i).data_bind(WordleGuessesDisplay.game_)
 
@@ -113,7 +114,7 @@ class WordleGuessDisplay(Static):
         game.GuessLetterState.INCORRECT: "white on black",
     }
 
-    game_: Reactive[game.WordleGame | None] = reactive(None)
+    game_: Reactive[wordle.WordleGame | None] = reactive(None)
 
     def __init__(self, guess_number: int, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -147,7 +148,7 @@ class WordleAlphabetDisplay(Static):
         game.AlphabetLetterState.NOT_GUESSED: "black on white",
     }
 
-    game_: Reactive[game.WordleGame | None] = reactive(None)
+    game_: Reactive[wordle.WordleGame | None] = reactive(None)
 
     def render(self) -> RenderResult:
         assert self.game_ is not None
@@ -248,7 +249,7 @@ class StatusDisplay(Static):
 
 
 class WordleTargetDisplay(Static):
-    game_: Reactive[game.WordleGame | None] = reactive(None)
+    game_: Reactive[wordle.WordleGame | None] = reactive(None)
 
     def render(self) -> RenderResult:
         assert self.game_ is not None

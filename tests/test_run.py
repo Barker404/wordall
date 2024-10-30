@@ -8,6 +8,7 @@ from rich import text
 from textual import widgets
 
 from wordall import game, run
+from wordall.games import wordle
 
 
 # This patching is a hack to choose the game options needed for testing, because there's
@@ -17,8 +18,8 @@ def app_with_wordle_game(
     mocker: pytest_mock.MockerFixture,
     mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
 ) -> run.WordallApp:
-    def get_game(self: run.WordallApp) -> game.WordleGame:  # noqa: ARG001
-        return game.WordleGame(pathlib.Path("/a/b/c"), 5, target_word_length=5)
+    def get_game(self: run.WordallApp) -> wordle.WordleGame:  # noqa: ARG001
+        return wordle.WordleGame(pathlib.Path("/a/b/c"), 5, target_word_length=5)
 
     mocker.patch("wordall.run.WordallApp.get_game", get_game)
     return run.WordallApp()
@@ -51,7 +52,9 @@ class TestTextEntry:
         self, app_with_wordle_game: run.WordallApp, mocker: pytest_mock.MockerFixture
     ) -> None:
         app = app_with_wordle_game
-        is_valid_word_mock = mocker.patch("wordall.game.WordleGame.is_valid_word")
+        is_valid_word_mock = mocker.patch(
+            "wordall.games.wordle.WordleGame.is_valid_word"
+        )
         is_valid_word_mock.return_value = False
 
         async with app.run_test() as pilot:
@@ -66,7 +69,9 @@ class TestTextEntry:
         self, app_with_wordle_game: run.WordallApp, mocker: pytest_mock.MockerFixture
     ) -> None:
         app = app_with_wordle_game
-        is_valid_word_mock = mocker.patch("wordall.game.WordleGame.is_valid_word")
+        is_valid_word_mock = mocker.patch(
+            "wordall.games.wordle.WordleGame.is_valid_word"
+        )
         is_valid_word_mock.return_value = True
 
         async with app.run_test() as pilot:
@@ -81,7 +86,7 @@ class TestGuessSubmission:
         self, app_with_wordle_game: run.WordallApp
     ) -> None:
         app = app_with_wordle_game
-        game_ = cast(game.WordleGame, app.game_)
+        game_ = cast(wordle.WordleGame, app.game_)
 
         async with app.run_test() as pilot:
             assert "ABCDE" not in game_.word_dictionary
@@ -97,7 +102,7 @@ class TestGuessSubmission:
         self, app_with_wordle_game: run.WordallApp
     ) -> None:
         app = app_with_wordle_game
-        game_ = cast(game.WordleGame, app.game_)
+        game_ = cast(wordle.WordleGame, app.game_)
         assert "APPLE" in game_.word_dictionary
         game_.target = "APPLE"
 
@@ -131,7 +136,7 @@ class TestGuessSubmission:
         self, app_with_wordle_game: run.WordallApp
     ) -> None:
         app = app_with_wordle_game
-        game_ = cast(game.WordleGame, app.game_)
+        game_ = cast(wordle.WordleGame, app.game_)
         assert "APPLE" in game_.word_dictionary
         game_.target = "APPLE"
 
@@ -166,7 +171,7 @@ class TestGuessSubmission:
         self, app_with_wordle_game: run.WordallApp
     ) -> None:
         app = app_with_wordle_game
-        game_ = cast(game.WordleGame, app.game_)
+        game_ = cast(wordle.WordleGame, app.game_)
         assert "APPLE" in game_.word_dictionary
         game_.target = "APPLE"
 
@@ -199,7 +204,7 @@ class TestGuessSubmission:
         self, app_with_wordle_game: run.WordallApp
     ) -> None:
         app = app_with_wordle_game
-        game_ = cast(game.WordleGame, app.game_)
+        game_ = cast(wordle.WordleGame, app.game_)
         assert "APPLE" in game_.word_dictionary
         game_.target = "APPLE"
 
@@ -218,7 +223,7 @@ class TestGuessSubmission:
         self, app_with_wordle_game: run.WordallApp
     ) -> None:
         app = app_with_wordle_game
-        game_ = cast(game.WordleGame, app.game_)
+        game_ = cast(wordle.WordleGame, app.game_)
         assert "APPLE" in game_.word_dictionary
         game_.target = "APPLE"
 
