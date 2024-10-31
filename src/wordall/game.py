@@ -72,6 +72,84 @@ class Game(abc.ABC):
         """
 
 
+class SingleWordleLikeBaseGame(Game):
+    """
+    Abstract base class for wordle-like games with a single target word. Guesses are
+    stored with states for each letter, and the overall state of each alphabet letter is
+    tracked throughout the game.
+    """
+
+    target: str
+
+    def __init__(
+        self,
+        guess_limit: int,
+    ) -> None:
+        super().__init__()
+
+        self.guess_limit = guess_limit
+        self.guesses: list[Guess] = []
+        self.alphabet_states = {
+            c: AlphabetLetterState.NOT_GUESSED for c in self.ALPHABET
+        }
+        self.game_state = GameState.GUESSING
+
+    def guess_word(self, guess_word: str) -> bool:
+        if self.game_state != GameState.GUESSING:
+            raise GameAlreadyFinishedError()
+
+        if not self.is_valid_word(guess_word):
+            raise InvalidGuessWordError(guess_word)
+
+        guess = Guess(guess_word, self.target)
+        self.guesses.append(guess)
+        self._update_alphabet_states(guess)
+
+        if guess_word == self.target:
+            self.game_state = GameState.SUCCEEDED
+            return True
+        elif len(self.guesses) == self.guess_limit:
+            self.game_state = GameState.FAILED
+            return True
+        else:
+            return False
+
+    def _update_alphabet_states(self, guess: Guess) -> None:
+        """
+        Updates game alphabet states as necessary based on the guess.
+
+        All letters start NOT_GUESSED. They can transition to FOUND if guessed
+        correctly anywhere (even if more exist) or UNUSED if guessed and not present in
+        the target. They can also transition to FOUND_ELSEWHERE is guessed in the wrong
+        position. FOUND_ELSEWHERE words can later transition to FOUND.
+        """
+        for c, state in guess.guess_letter_states:
+            if state == GuessLetterState.CORRECT:
+                # Transition to FOUND from any state. Could even transition from UNUSED
+                # if the letter was already guessed incorrectly in this word.
+                self.alphabet_states[c] = AlphabetLetterState.FOUND
+            elif state == GuessLetterState.ELSEWHERE:
+                if self.alphabet_states[c] != AlphabetLetterState.FOUND:
+                    # Transition to FOUND_ELSEWHERE from any state except FOUND.
+                    # In theory it shouldn't be possible to transition from UNUSED,
+                    # because ELSEWHERE should always come before INCORRECT on the same
+                    # letter.
+                    assert self.alphabet_states[c] != AlphabetLetterState.UNUSED
+                    self.alphabet_states[c] = AlphabetLetterState.FOUND_ELSEWHERE
+            else:
+                assert state == GuessLetterState.INCORRECT
+                if self.alphabet_states[c] == AlphabetLetterState.NOT_GUESSED:
+                    # Transition from NOT_GUESSED to UNUSED. A guess letter could be
+                    # INCORRECT without the alphabet letter being UNUSED if the letter
+                    # is in the guess word multiple times. If the alphabet letter is
+                    # still UNUSED by the end of the update, it really is UNUSED.
+                    self.alphabet_states[c] = AlphabetLetterState.UNUSED
+
+    @property
+    def max_guess_word_length(self) -> int | None:
+        return len(self.target)
+
+
 class Guess:
     def __init__(self, guess_word: str, target_word: str) -> None:
         self.target_word = target_word

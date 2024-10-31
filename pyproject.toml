@@ -82,4 +82,5 @@ ignore = [
 "tests/*" = [
     "ARG002",   # Pytest fixtures often require unused arguments
     "PLR2004",  # Magic values in tests are fine
+    "PLR0913",  # parametrize can lead to many arguments
 ]

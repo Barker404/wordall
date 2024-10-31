@@ -1,8 +1,11 @@
+import pathlib
 from typing import Any
 from unittest import mock
 
 import pytest
 import pytest_mock
+
+from wordall.games import numberle, wordle
 
 
 @pytest.fixture
@@ -53,3 +56,22 @@ def _mock_dictionary_file_helper(
 
     mocker.patch("pathlib.Path.open", open_mock_wrapper)
     return open_mock, word_list
+
+
+@pytest.fixture
+def wordle_game_instance(
+    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
+) -> wordle.WordleGame:
+    return wordle.WordleGame(pathlib.Path("/a/b/c"), 3)
+
+
+@pytest.fixture
+def wordle_game_instance_5_letter(
+    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
+) -> wordle.WordleGame:
+    return wordle.WordleGame(pathlib.Path("/a/b/c"), 3, target_word_length=5)
+
+
+@pytest.fixture
+def numberle_game_instance_5_digit() -> numberle.NumberleGame:
+    return numberle.NumberleGame(3, target_word_length=5)
