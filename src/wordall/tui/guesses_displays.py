@@ -9,6 +9,18 @@ from wordall.games import wordle
 from wordall.tui import app
 
 
+class WordleGuessesDisplay(widgets.Static):
+    game_: reactive.Reactive[wordle.WordleGame | None] = reactive.reactive(None)
+
+    def compose(self) -> textual_app.ComposeResult:
+        # At compose time reactive game has been data bound, but not yet updated to
+        # match parent version. So instead we use a hack to directly access the game on
+        # the app.
+        game_ = cast(wordle.WordleGame, cast(app.WordallApp, self.app).game_)
+        for i in range(game_.guess_limit):
+            yield WordleGuessDisplay(i).data_bind(WordleGuessesDisplay.game_)
+
+
 class WordleGuessDisplay(widgets.Static):
     guess_letter_state_to_style: ClassVar[dict[game.GuessLetterState, str]] = {
         game.GuessLetterState.CORRECT: "black on dark_green",
@@ -40,15 +52,3 @@ class WordleGuessDisplay(widgets.Static):
         cls, c: str, state: game.GuessLetterState
     ) -> text.Text:
         return text.Text(c, style=cls.guess_letter_state_to_style[state])
-
-
-class WordleGuessesDisplay(widgets.Static):
-    game_: reactive.Reactive[wordle.WordleGame | None] = reactive.reactive(None)
-
-    def compose(self) -> textual_app.ComposeResult:
-        # At compose time reactive game has been data bound, but not yet updated to
-        # match parent version. So instead we use a hack to directly access the game on
-        # the app.
-        game_ = cast(wordle.WordleGame, cast(app.WordallApp, self.app).game_)
-        for i in range(game_.guess_limit):
-            yield WordleGuessDisplay(i).data_bind(WordleGuessesDisplay.game_)

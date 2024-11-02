@@ -15,37 +15,6 @@ from wordall.tui import (
 )
 
 
-class ValidGuessWord(validation.Validator):
-    def __init__(self, game_: game.Game) -> None:
-        self.game_ = game_
-
-    def validate(self, value: str) -> validation.ValidationResult:
-        """Check a string is equal to its reverse."""
-        if self.game_.is_valid_word(value.upper()):
-            return self.success()
-        else:
-            return self.failure("Invalid guess")
-
-
-class UnfocusableScrollableContainer(containers.ScrollableContainer, can_focus=False):
-    pass
-
-
-class StatusDisplay(widgets.Static):
-    game_state_to_message: ClassVar[dict[game.GameState, str]] = {
-        game.GameState.GUESSING: "Make a guess.",
-        game.GameState.FAILED: "You lost, too bad.",
-        game.GameState.SUCCEEDED: "Congratulations, you won!",
-    }
-
-    game_: reactive.Reactive[game.Game | None] = reactive.reactive(None)
-
-    def render(self) -> textual_app.RenderResult:
-        assert self.game_ is not None
-
-        return self.game_state_to_message[self.game_.game_state]
-
-
 class WordallApp(textual_app.App[None]):
     BINDINGS: ClassVar[list[binding.BindingType]] = [
         binding.Binding("ctrl+n", "new_game", "New Game")
@@ -112,3 +81,34 @@ class WordallApp(textual_app.App[None]):
     def action_new_game(self) -> None:
         self.game_ = self.get_game()
         self.refresh(recompose=True)
+
+
+class UnfocusableScrollableContainer(containers.ScrollableContainer, can_focus=False):
+    pass
+
+
+class StatusDisplay(widgets.Static):
+    game_state_to_message: ClassVar[dict[game.GameState, str]] = {
+        game.GameState.GUESSING: "Make a guess.",
+        game.GameState.FAILED: "You lost, too bad.",
+        game.GameState.SUCCEEDED: "Congratulations, you won!",
+    }
+
+    game_: reactive.Reactive[game.Game | None] = reactive.reactive(None)
+
+    def render(self) -> textual_app.RenderResult:
+        assert self.game_ is not None
+
+        return self.game_state_to_message[self.game_.game_state]
+
+
+class ValidGuessWord(validation.Validator):
+    def __init__(self, game_: game.Game) -> None:
+        self.game_ = game_
+
+    def validate(self, value: str) -> validation.ValidationResult:
+        """Check a string is equal to its reverse."""
+        if self.game_.is_valid_word(value.upper()):
+            return self.success()
+        else:
+            return self.failure("Invalid guess")
