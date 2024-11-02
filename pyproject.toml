@@ -28,6 +28,10 @@ dev = [
 exclude_also = [
     "if TYPE_CHECKING:",
 ]
+[tool.coverage.run]
+omit = [
+    "src/wordall/run.py",  # Currently nothing to test
+]
 
 [tool.pytest.ini_options]
 # Use future default value to supress warning
