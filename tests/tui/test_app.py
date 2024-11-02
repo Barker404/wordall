@@ -21,7 +21,7 @@ def app_with_wordle_game(
     mocker: pytest_mock.MockerFixture,
     mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
 ) -> app_module.WordallApp:
-    def get_game(self: app_module.WordallApp) -> wordle.WordleGame:  # noqa: ARG001
+    def get_game(self: app_module.WordallApp, game_key: str) -> wordle.WordleGame:  # noqa: ARG001
         return wordle.WordleGame(pathlib.Path("/a/b/c"), 5, target_word_length=5)
 
     mocker.patch("wordall.tui.app.WordallApp.get_game", get_game)
@@ -114,7 +114,7 @@ class TestGuessSubmission:
         game.target = "APPLE"
 
         async with app.run_test() as pilot:
-            guess_widgets = app.query(guesses_displays.WordleGuessDisplay)
+            guess_widgets = app.query(guesses_displays.GuessFromListDisplay)
 
             assert "BREAD" in game.word_dictionary
             await pilot.press("B", "R", "E", "A", "D", "enter")
@@ -147,8 +147,12 @@ class TestGuessSubmission:
         assert "APPLE" in game.word_dictionary
         game.target = "APPLE"
 
+        guess_letter_state_to_style = (
+            guesses_displays.GuessFromListDisplay.guess_letter_state_to_style
+        )
+
         async with app.run_test() as pilot:
-            guess_widgets = app.query(guesses_displays.WordleGuessDisplay)
+            guess_widgets = app.query(guesses_displays.GuessFromListDisplay)
 
             assert "BREAD" in game.word_dictionary
             await pilot.press("B", "R", "E", "A", "D", "enter")
@@ -167,12 +171,7 @@ class TestGuessSubmission:
                 span = rendered_letter.spans[0]
                 assert span.start == 0
                 assert span.end == 1
-                assert (
-                    span.style
-                    == guesses_displays.WordleGuessDisplay.guess_letter_state_to_style[
-                        guess_letter_state
-                    ]
-                )
+                assert span.style == guess_letter_state_to_style[guess_letter_state]
 
     async def test_valid_guess_updates_alphabet_states(
         self, app_with_wordle_game: app_module.WordallApp
@@ -182,9 +181,13 @@ class TestGuessSubmission:
         assert "APPLE" in game.word_dictionary
         game.target = "APPLE"
 
+        alphabet_letter_state_to_style = (
+            alphabet_displays.AlphabetLetterStateDisplay.alphabet_letter_state_to_style
+        )
+
         async with app.run_test() as pilot:
             alphabet_widget = app.query_exactly_one(
-                alphabet_displays.WordleAlphabetDisplay
+                alphabet_displays.AlphabetLetterStateDisplay
             )
 
             assert "BREAD" in game.word_dictionary
@@ -193,10 +196,6 @@ class TestGuessSubmission:
             alphabet_renderable = alphabet_widget.render()
             assert isinstance(alphabet_renderable, text.Text)
             rendered_alphabet_letters = alphabet_renderable.split(" ")
-
-            alphabet_letter_state_to_style = (
-                alphabet_displays.WordleAlphabetDisplay.alphabet_letter_state_to_style
-            )
 
             for rendered_letter, (alphabet_letter, alphabet_letter_state) in zip(
                 rendered_alphabet_letters, game.alphabet_states.items(), strict=True
@@ -223,7 +222,7 @@ class TestGuessSubmission:
 
             assert game.game_state == game_module.GameState.SUCCEEDED
             assert app.query_exactly_one(guess_input_module.GuessInput).disabled
-            target_display = app.query_exactly_one(target_displays.WordleTargetDisplay)
+            target_display = app.query_exactly_one(target_displays.TargetDisplay)
             assert target_display.visible
             target_renderable = target_display.render()
             assert isinstance(target_renderable, str)
@@ -243,7 +242,7 @@ class TestGuessSubmission:
 
             assert game.game_state == game_module.GameState.FAILED
             assert app.query_exactly_one(guess_input_module.GuessInput).disabled
-            target_display = app.query_exactly_one(target_displays.WordleTargetDisplay)
+            target_display = app.query_exactly_one(target_displays.TargetDisplay)
             assert target_display.visible
             target_renderable = target_display.render()
             assert isinstance(target_renderable, str)

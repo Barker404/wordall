@@ -1,8 +1,8 @@
-WordleGuessesDisplay {
+GuessesDisplay {
     margin: 1;
 }
 
-WordleAlphabetDisplay {
+AlphabetDisplay {
     margin: 1;
 }
 

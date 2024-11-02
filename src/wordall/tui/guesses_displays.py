@@ -1,34 +1,45 @@
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar, Generic, TypeVar
 
 from rich import text
 from textual import app as textual_app
 from textual import reactive, widgets
 
 from wordall import game
-from wordall.games import wordle
-from wordall.tui import app
+
+T = TypeVar("T", bound=game.Game)
 
 
-class WordleGuessesDisplay(widgets.Static):
-    game_: reactive.Reactive[wordle.WordleGame | None] = reactive.reactive(None)
+class GuessesDisplay(widgets.Static, Generic[T]):
+    game_: reactive.Reactive[T | None] = reactive.reactive(None)
+
+
+# This would be better as a protocol, but there's no typing.Intersection to have it also
+# be typed as a Game subclass
+GameWithGuessList = game.SingleWordleLikeBaseGame
+
+
+class GuessesFromListDisplay(GuessesDisplay[GameWithGuessList]):
+    game_: reactive.Reactive[GameWithGuessList | None] = reactive.reactive(None)
 
     def compose(self) -> textual_app.ComposeResult:
         # At compose time reactive game has been data bound, but not yet updated to
         # match parent version. So instead we use a hack to directly access the game on
         # the app.
-        game_ = cast(wordle.WordleGame, cast(app.WordallApp, self.app).game_)
+        game_: game.Game = self.app.game_  # type: ignore
+        assert isinstance(game_, GameWithGuessList)
+
         for i in range(game_.guess_limit):
-            yield WordleGuessDisplay(i).data_bind(WordleGuessesDisplay.game_)
+            yield GuessFromListDisplay(i).data_bind(GuessesFromListDisplay.game_)
 
 
-class WordleGuessDisplay(widgets.Static):
+class GuessFromListDisplay(widgets.Static):
     guess_letter_state_to_style: ClassVar[dict[game.GuessLetterState, str]] = {
         game.GuessLetterState.CORRECT: "black on dark_green",
         game.GuessLetterState.ELSEWHERE: "black on yellow",
         game.GuessLetterState.INCORRECT: "white on black",
     }
 
-    game_: reactive.Reactive[wordle.WordleGame | None] = reactive.reactive(None)
+    game_: reactive.Reactive[GameWithGuessList | None] = reactive.reactive(None)
 
     def __init__(self, guess_number: int, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -44,8 +55,10 @@ class WordleGuessDisplay(widgets.Static):
                 self.render_guess_letter_state(c, state)
                 for c, state in guess.guess_letter_states
             )
+        elif self.game_.max_guess_word_length is not None:
+            return separator.join([text.Text("#")] * self.game_.max_guess_word_length)
         else:
-            return separator.join([text.Text("#")] * len(self.game_.target))
+            return text.Text("#")
 
     @classmethod
     def render_guess_letter_state(
