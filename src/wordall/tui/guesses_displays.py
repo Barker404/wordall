@@ -1,29 +1,28 @@
 from typing import Any, ClassVar, cast
 
 from rich import text
-from textual.app import ComposeResult, RenderResult
-from textual.reactive import Reactive, reactive
-from textual.widgets import Static
+from textual import app as textual_app
+from textual import reactive, widgets
 
 from wordall import game
 from wordall.games import wordle
 from wordall.tui import app
 
 
-class WordleGuessDisplay(Static):
+class WordleGuessDisplay(widgets.Static):
     guess_letter_state_to_style: ClassVar[dict[game.GuessLetterState, str]] = {
         game.GuessLetterState.CORRECT: "black on dark_green",
         game.GuessLetterState.ELSEWHERE: "black on yellow",
         game.GuessLetterState.INCORRECT: "white on black",
     }
 
-    game_: Reactive[wordle.WordleGame | None] = reactive(None)
+    game_: reactive.Reactive[wordle.WordleGame | None] = reactive.reactive(None)
 
     def __init__(self, guess_number: int, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.guess_number = guess_number
 
-    def render(self) -> RenderResult:
+    def render(self) -> textual_app.RenderResult:
         assert self.game_ is not None
 
         separator = text.Text(" ")
@@ -43,10 +42,10 @@ class WordleGuessDisplay(Static):
         return text.Text(c, style=cls.guess_letter_state_to_style[state])
 
 
-class WordleGuessesDisplay(Static):
-    game_: Reactive[wordle.WordleGame | None] = reactive(None)
+class WordleGuessesDisplay(widgets.Static):
+    game_: reactive.Reactive[wordle.WordleGame | None] = reactive.reactive(None)
 
-    def compose(self) -> ComposeResult:
+    def compose(self) -> textual_app.ComposeResult:
         # At compose time reactive game has been data bound, but not yet updated to
         # match parent version. So instead we use a hack to directly access the game on
         # the app.

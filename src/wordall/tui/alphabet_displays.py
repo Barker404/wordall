@@ -1,15 +1,14 @@
 from typing import ClassVar
 
 from rich import text
-from textual.app import RenderResult
-from textual.reactive import Reactive, reactive
-from textual.widgets import Static
+from textual import app as textual_app
+from textual import reactive, widgets
 
 from wordall import game
 from wordall.games import wordle
 
 
-class WordleAlphabetDisplay(Static):
+class WordleAlphabetDisplay(widgets.Static):
     alphabet_letter_state_to_style: ClassVar[dict[game.AlphabetLetterState, str]] = {
         game.AlphabetLetterState.FOUND: "black on dark_green",
         game.AlphabetLetterState.FOUND_ELSEWHERE: "black on yellow",
@@ -17,9 +16,9 @@ class WordleAlphabetDisplay(Static):
         game.AlphabetLetterState.NOT_GUESSED: "black on white",
     }
 
-    game_: Reactive[wordle.WordleGame | None] = reactive(None)
+    game_: reactive.Reactive[wordle.WordleGame | None] = reactive.reactive(None)
 
-    def render(self) -> RenderResult:
+    def render(self) -> textual_app.RenderResult:
         assert self.game_ is not None
 
         separator = text.Text(" ")

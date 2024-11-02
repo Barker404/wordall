@@ -1,9 +1,9 @@
 from typing import Any
 
 from rich import text
-from textual.app import RenderResult
-from textual.widgets import Input
-from textual.widgets._input import _InputRenderable
+from textual import app as textual_app
+from textual import widgets
+from textual.widgets import _input
 
 
 class InputSpacingWrapper:
@@ -15,7 +15,7 @@ class InputSpacingWrapper:
 
     SEPARATOR = " "
 
-    def __init__(self, input_instance: Input):
+    def __init__(self, input_instance: widgets.Input):
         self._wrapped_input = input_instance
 
     def __getattr__(self, name: str) -> Any:
@@ -42,7 +42,7 @@ class InputSpacingWrapper:
         return self._wrapped_input.cursor_position * 2
 
 
-class GuessInput(Input):
+class GuessInput(widgets.Input):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         # Width needs to account for spacing (see InputSpacingWrapper)
@@ -55,7 +55,7 @@ class GuessInput(Input):
     def insert_text_at_cursor(self, text: str) -> None:
         super().insert_text_at_cursor(text.upper())
 
-    def render(self) -> RenderResult:
+    def render(self) -> textual_app.RenderResult:
         if not self.value:
             return super().render()
 
@@ -70,4 +70,4 @@ class GuessInput(Input):
         # be an alternative, but then other behaviour like deletion and cursor movement
         # needs to be changed. Instead we use a hack to wrap the GuessInput provided to
         # _InputRenderable and make it look like it has spacing in the value here only.
-        return _InputRenderable(InputSpacingWrapper(self), self._cursor_visible)  # type: ignore
+        return _input._InputRenderable(InputSpacingWrapper(self), self._cursor_visible)  # type: ignore  # noqa SLF001

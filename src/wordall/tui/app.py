@@ -1,13 +1,9 @@
 import pathlib
 from typing import Any, ClassVar
 
-from textual import on
-from textual.app import App, ComposeResult, RenderResult
-from textual.binding import Binding, BindingType
-from textual.containers import ScrollableContainer
-from textual.reactive import Reactive, reactive
-from textual.validation import ValidationResult, Validator
-from textual.widgets import Footer, Header, Input, Label, Static
+import textual
+from textual import app as textual_app
+from textual import binding, containers, reactive, validation, widgets
 
 from wordall import game
 from wordall.games import wordle
@@ -19,11 +15,11 @@ from wordall.tui import (
 )
 
 
-class ValidGuessWord(Validator):
+class ValidGuessWord(validation.Validator):
     def __init__(self, game_: game.Game) -> None:
         self.game_ = game_
 
-    def validate(self, value: str) -> ValidationResult:
+    def validate(self, value: str) -> validation.ValidationResult:
         """Check a string is equal to its reverse."""
         if self.game_.is_valid_word(value.upper()):
             return self.success()
@@ -31,31 +27,33 @@ class ValidGuessWord(Validator):
             return self.failure("Invalid guess")
 
 
-class UnfocusableScrollableContainer(ScrollableContainer, can_focus=False):
+class UnfocusableScrollableContainer(containers.ScrollableContainer, can_focus=False):
     pass
 
 
-class StatusDisplay(Static):
+class StatusDisplay(widgets.Static):
     game_state_to_message: ClassVar[dict[game.GameState, str]] = {
         game.GameState.GUESSING: "Make a guess.",
         game.GameState.FAILED: "You lost, too bad.",
         game.GameState.SUCCEEDED: "Congratulations, you won!",
     }
 
-    game_: Reactive[game.Game | None] = reactive(None)
+    game_: reactive.Reactive[game.Game | None] = reactive.reactive(None)
 
-    def render(self) -> RenderResult:
+    def render(self) -> textual_app.RenderResult:
         assert self.game_ is not None
 
         return self.game_state_to_message[self.game_.game_state]
 
 
-class WordallApp(App[None]):
-    BINDINGS: ClassVar[list[BindingType]] = [Binding("ctrl+n", "new_game", "New Game")]
+class WordallApp(textual_app.App[None]):
+    BINDINGS: ClassVar[list[binding.BindingType]] = [
+        binding.Binding("ctrl+n", "new_game", "New Game")
+    ]
 
     CSS_PATH = "app.tcss"
 
-    game_: Reactive[game.Game | None] = reactive(None)
+    game_: reactive.Reactive[game.Game | None] = reactive.reactive(None)
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -65,10 +63,10 @@ class WordallApp(App[None]):
         # TODO: Should probably be an injected factory
         return wordle.WordleGame(pathlib.Path("dict_long.txt"), 5, target_word_length=4)
 
-    def compose(self) -> ComposeResult:
+    def compose(self) -> textual_app.ComposeResult:
         assert self.game_ is not None
 
-        yield Header()
+        yield widgets.Header()
         with UnfocusableScrollableContainer():
             yield guesses_displays.WordleGuessesDisplay().data_bind(WordallApp.game_)
             yield guess_input.GuessInput(
@@ -76,16 +74,16 @@ class WordallApp(App[None]):
                 validators=ValidGuessWord(self.game_),
             )
             yield alphabet_displays.WordleAlphabetDisplay().data_bind(WordallApp.game_)
-            yield Label("New Game Started.", id="game_messages")
+            yield widgets.Label("New Game Started.", id="game_messages")
             yield StatusDisplay().data_bind(WordallApp.game_)
-        yield Footer()
+        yield widgets.Footer()
 
-    @on(Input.Submitted, "GuessInput")
-    def guess_word(self, event: Input.Submitted) -> None:
+    @textual.on(widgets.Input.Submitted, "GuessInput")
+    def guess_word(self, event: widgets.Input.Submitted) -> None:
         assert self.game_ is not None
         assert self.game_.game_state == game.GameState.GUESSING
 
-        label = self.query_exactly_one("#game_messages", Label)
+        label = self.query_exactly_one("#game_messages", widgets.Label)
 
         if event.validation_result is not None and not event.validation_result.is_valid:
             label.update(f"Invalid guess: {event.value}")
