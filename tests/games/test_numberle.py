@@ -17,7 +17,9 @@ class TestInit:
         mock_randrange = mocker.patch("random.randrange")
         mock_randrange.return_value = expected_range - 1
 
-        numberle_game = numberle.NumberleGame(3, target_word_length=target_word_length)
+        numberle_game = numberle.NumberleGame(
+            guess_limit=3, target_word_length=target_word_length
+        )
 
         mock_randrange.assert_called_once_with(expected_range)
         assert int(numberle_game.target) == mock_randrange.return_value
@@ -26,7 +28,7 @@ class TestInit:
         mock_randrange = mocker.patch("random.randrange")
         mock_randrange.return_value = 1
 
-        numberle_game = numberle.NumberleGame(3, target_word_length=5)
+        numberle_game = numberle.NumberleGame(guess_limit=3, target_word_length=5)
 
         assert numberle_game.target == "00001"
 

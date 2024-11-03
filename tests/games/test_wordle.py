@@ -15,7 +15,7 @@ class TestGameInit:
         open_mock, file_word_list = mock_valid_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordle.WordleGame(dictionary_file_path, 1)
+        wordle_game = wordle.WordleGame(dictionary_file_path, guess_limit=1)
 
         open_mock.assert_called_once_with(dictionary_file_path)
         assert wordle_game.word_dictionary == set(file_word_list)
@@ -27,7 +27,9 @@ class TestGameInit:
         open_mock, _ = mock_valid_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordle.WordleGame(dictionary_file_path, 1, target_word_length=5)
+        wordle_game = wordle.WordleGame(
+            dictionary_file_path, guess_limit=1, target_word_length=5
+        )
 
         open_mock.assert_called_once_with(dictionary_file_path)
         assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
@@ -39,7 +41,9 @@ class TestGameInit:
         open_mock, _ = mock_valid_empty_line_dictionary_file
         dictionary_file_path = pathlib.Path("/a/b/c")
 
-        wordle_game = wordle.WordleGame(dictionary_file_path, 1, target_word_length=5)
+        wordle_game = wordle.WordleGame(
+            dictionary_file_path, guess_limit=1, target_word_length=5
+        )
 
         open_mock.assert_called_once_with(dictionary_file_path)
         assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
@@ -49,14 +53,14 @@ class TestGameInit:
         mock_invalid_character_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
         with pytest.raises(wordle.InvalidDictionaryFileError):
-            wordle.WordleGame(pathlib.Path("/a/b/c"), 1)
+            wordle.WordleGame(pathlib.Path("/a/b/c"), guess_limit=1)
 
     def test_raises_exception_on_empty_dictionary(
         self,
         mock_empty_dictionary_file: tuple[mock.MagicMock, list[str]],
     ) -> None:
         with pytest.raises(wordle.InvalidDictionaryFileError):
-            wordle.WordleGame(pathlib.Path("/a/b/c"), 1)
+            wordle.WordleGame(pathlib.Path("/a/b/c"), guess_limit=1)
 
     def test_selects_random_target(
         self,
@@ -67,7 +71,7 @@ class TestGameInit:
 
         mock_choice = mocker.patch("random.choice")
 
-        wordle_game = wordle.WordleGame(pathlib.Path("/a/b/c"), 0)
+        wordle_game = wordle.WordleGame(pathlib.Path("/a/b/c"), guess_limit=1)
 
         mock_choice.assert_called_once_with(list(set(file_word_list)))
         assert wordle_game.target == mock_choice.return_value

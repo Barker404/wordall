@@ -65,10 +65,10 @@ class WordallApp(textual_app.App[None]):
         # class from registry
         if game_key == "wordle":
             return wordle.WordleGame(
-                pathlib.Path("dict_long.txt"), 5, target_word_length=4
+                pathlib.Path("dict_long.txt"), guess_limit=5, target_word_length=4
             )
         elif game_key == "numberle":
-            return numberle.NumberleGame(5, target_word_length=5)
+            return numberle.NumberleGame(guess_limit=5, target_word_length=5)
         else:
             raise ValueError()
 

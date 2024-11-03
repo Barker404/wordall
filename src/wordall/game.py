@@ -83,7 +83,7 @@ class SingleWordleLikeBaseGame(Game):
 
     def __init__(
         self,
-        guess_limit: int,
+        guess_limit: int | None = None,
     ) -> None:
         super().__init__()
 
@@ -108,7 +108,7 @@ class SingleWordleLikeBaseGame(Game):
         if guess_word == self.target:
             self.game_state = GameState.SUCCEEDED
             return True
-        elif len(self.guesses) == self.guess_limit:
+        elif self.guess_limit is not None and len(self.guesses) == self.guess_limit:
             self.game_state = GameState.FAILED
             return True
         else:

@@ -9,7 +9,7 @@ class NumberleGame(game.SingleWordleLikeBaseGame):
 
     def __init__(
         self,
-        guess_limit: int,
+        guess_limit: int | None = None,
         target_word_length: int = 5,
     ) -> None:
         super().__init__(guess_limit)

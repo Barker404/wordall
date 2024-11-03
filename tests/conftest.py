@@ -62,16 +62,32 @@ def _mock_dictionary_file_helper(
 def wordle_game_instance(
     mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
 ) -> wordle.WordleGame:
-    return wordle.WordleGame(pathlib.Path("/a/b/c"), 3)
+    return wordle.WordleGame(pathlib.Path("/a/b/c"), guess_limit=3)
 
 
 @pytest.fixture
 def wordle_game_instance_5_letter(
     mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
 ) -> wordle.WordleGame:
-    return wordle.WordleGame(pathlib.Path("/a/b/c"), 3, target_word_length=5)
+    return wordle.WordleGame(
+        pathlib.Path("/a/b/c"), guess_limit=3, target_word_length=5
+    )
+
+
+@pytest.fixture
+def wordle_game_instance_5_letter_no_limit(
+    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
+) -> wordle.WordleGame:
+    return wordle.WordleGame(
+        pathlib.Path("/a/b/c"), guess_limit=None, target_word_length=5
+    )
 
 
 @pytest.fixture
 def numberle_game_instance_5_digit() -> numberle.NumberleGame:
-    return numberle.NumberleGame(3, target_word_length=5)
+    return numberle.NumberleGame(guess_limit=3, target_word_length=5)
+
+
+@pytest.fixture
+def numberle_game_instance_5_digit_no_limit() -> numberle.NumberleGame:
+    return numberle.NumberleGame(guess_limit=None, target_word_length=5)

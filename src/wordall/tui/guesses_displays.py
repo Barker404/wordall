@@ -28,8 +28,22 @@ class GuessesFromListDisplay(GuessesDisplay[GameWithGuessList]):
         game_: game.Game = self.app.game_  # type: ignore
         assert isinstance(game_, GameWithGuessList)
 
-        for i in range(game_.guess_limit):
-            yield GuessFromListDisplay(i).data_bind(GuessesFromListDisplay.game_)
+        if game_.guess_limit is not None:
+            for i in range(game_.guess_limit):
+                yield GuessFromListDisplay(i).data_bind(GuessesFromListDisplay.game_)
+
+    def watch_game_(
+        self, _old_game: GameWithGuessList | None, _new_game: GameWithGuessList | None
+    ) -> None:
+        if self.game_ is None or self.game_.guess_limit is not None:
+            return
+
+        if len(self.game_.guesses) > len(self.children):
+            for i in range(len(self.children), len(self.game_.guesses)):
+                new_child = GuessFromListDisplay(i).data_bind(
+                    GuessesFromListDisplay.game_
+                )
+                self.mount(new_child)
 
 
 class GuessFromListDisplay(widgets.Static):

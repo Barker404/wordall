@@ -17,7 +17,7 @@ class WordleGame(game.SingleWordleLikeBaseGame):
     def __init__(
         self,
         dictionary_file_path: pathlib.Path,
-        guess_limit: int,
+        guess_limit: int | None = None,
         target_word_length: int | None = None,
     ) -> None:
         super().__init__(guess_limit)

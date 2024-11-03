@@ -22,7 +22,23 @@ def app_with_wordle_game(
     mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
 ) -> app_module.WordallApp:
     def get_game(self: app_module.WordallApp, game_key: str) -> wordle.WordleGame:  # noqa: ARG001
-        return wordle.WordleGame(pathlib.Path("/a/b/c"), 5, target_word_length=5)
+        return wordle.WordleGame(
+            pathlib.Path("/a/b/c"), guess_limit=5, target_word_length=5
+        )
+
+    mocker.patch("wordall.tui.app.WordallApp.get_game", get_game)
+    return app_module.WordallApp()
+
+
+@pytest.fixture
+def app_with_wordle_game_no_limit(
+    mocker: pytest_mock.MockerFixture,
+    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
+) -> app_module.WordallApp:
+    def get_game(self: app_module.WordallApp, game_key: str) -> wordle.WordleGame:  # noqa: ARG001
+        return wordle.WordleGame(
+            pathlib.Path("/a/b/c"), guess_limit=None, target_word_length=5
+        )
 
     mocker.patch("wordall.tui.app.WordallApp.get_game", get_game)
     return app_module.WordallApp()
@@ -136,6 +152,36 @@ class TestGuessSubmission:
             assert len(game.guesses) == 2
             assert game.guesses[1].guess_word == "CHIPS"
             guess_renderable = guess_widgets[1].render()
+            assert isinstance(guess_renderable, text.Text)
+            assert " ".join("CHIPS") in str(guess_renderable)
+
+    async def test_valid_guess_displayed_when_no_guess_limit(
+        self, app_with_wordle_game_no_limit: app_module.WordallApp
+    ) -> None:
+        app = app_with_wordle_game_no_limit
+        game = cast(wordle.WordleGame, app.game_)
+        assert "APPLE" in game.word_dictionary
+        game.target = "APPLE"
+
+        async with app.run_test() as pilot:
+            guesses_widget = app.query_exactly_one(
+                guesses_displays.GuessesFromListDisplay
+            )
+            assert len(guesses_widget.children) == 0
+
+            assert "BREAD" in game.word_dictionary
+            await pilot.press("B", "R", "E", "A", "D", "enter")
+
+            assert len(guesses_widget.children) == 1
+            guess_renderable = guesses_widget.children[0].render()
+            assert isinstance(guess_renderable, text.Text)
+            assert " ".join("BREAD") in str(guess_renderable)
+
+            assert "CHIPS" in game.word_dictionary
+            await pilot.press("C", "H", "I", "P", "S", "enter")
+
+            assert len(guesses_widget.children) == 2
+            guess_renderable = guesses_widget.children[1].render()
             assert isinstance(guess_renderable, text.Text)
             assert " ".join("CHIPS") in str(guess_renderable)
 

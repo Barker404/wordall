@@ -123,6 +123,37 @@ class TestSingleWordleLikeBaseGameGuessWord:
     @pytest.mark.parametrize(
         ("game_fixture_name", "target_word", "incorrect_word"),
         [
+            ("wordle_game_instance_5_letter_no_limit", "APPLE", "BREAD"),
+            ("numberle_game_instance_5_digit_no_limit", "12345", "98765"),
+        ],
+    )
+    def test_many_guesses_allowed_with_no_guess_limit(
+        self,
+        game_fixture_name: str,
+        target_word: str,
+        incorrect_word: str,
+        request: pytest.FixtureRequest,
+    ) -> None:
+        game_instance: game.SingleWordleLikeBaseGame = request.getfixturevalue(
+            game_fixture_name
+        )
+
+        assert game_instance.is_valid_word(target_word)
+        game_instance.target = target_word
+        assert game_instance.guesses == []
+        assert game_instance.guess_limit is None
+        assert game_instance.game_state == game.GameState.GUESSING
+
+        for _ in range(100):
+            return_value = game_instance.guess_word(incorrect_word)
+            assert not return_value
+
+        assert len(game_instance.guesses) == 100
+        assert game_instance.game_state == game.GameState.GUESSING
+
+    @pytest.mark.parametrize(
+        ("game_fixture_name", "target_word", "incorrect_word"),
+        [
             ("wordle_game_instance_5_letter", "APPLE", "BREAD"),
             ("numberle_game_instance_5_digit", "12345", "98765"),
         ],
