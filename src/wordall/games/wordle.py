@@ -18,7 +18,7 @@ class WordleGame(game.SingleWordleLikeBaseGame):
         self,
         dictionary_file_path: pathlib.Path,
         guess_limit: int | None = None,
-        target_word_length: int | None = None,
+        target_word_length: int = 5,
     ) -> None:
         super().__init__(guess_limit)
 
@@ -26,8 +26,6 @@ class WordleGame(game.SingleWordleLikeBaseGame):
             dictionary_file_path, word_length=target_word_length
         )
         self.target = self._select_target()
-        if target_word_length:
-            assert len(self.target) == target_word_length
 
     def _load_word_dictionary(
         self, dictionary_file_path: pathlib.Path, word_length: int | None = None

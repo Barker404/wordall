@@ -59,13 +59,6 @@ def _mock_dictionary_file_helper(
 
 
 @pytest.fixture
-def wordle_game_instance(
-    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
-) -> wordle.WordleGame:
-    return wordle.WordleGame(pathlib.Path("/a/b/c"), guess_limit=3)
-
-
-@pytest.fixture
 def wordle_game_instance_5_letter(
     mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
 ) -> wordle.WordleGame:
