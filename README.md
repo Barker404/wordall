@@ -91,3 +91,23 @@ or
 ```
 mypy --strict .
 ```
+
+### Testing github workflows
+Github workflows can be tested locally with `act` for faster feedback (although there
+may be some differences). Requires docker (https://docs.docker.com/engine/install/).
+
+Install act:
+```
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+```
+
+Run workflows for push event:
+```
+act push
+```
+Run only one python version:
+```
+act push --matrix python-version:3.12
+```
+
+See also https://nektosact.com/usage/index.html
