@@ -34,6 +34,8 @@ omit = [
 ]
 
 [tool.pytest.ini_options]
+# Always show coverage
+addopts = "--cov-report term-missing --cov src/"
 # Use future default value to supress warning
 asyncio_default_fixture_loop_scope = "function"
 

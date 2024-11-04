@@ -58,8 +58,9 @@ python -m build
 ### Run tests
 After activating an environment with dev dependencies:
 ```
-pytest --cov-report term-missing --cov=src tests/
+pytest
 ```
+Coverage will be shown in output.
 
 ### Formatting, linting, and type-checking
 Python formatting and linting are done using ruff for python. Shell script formatting
