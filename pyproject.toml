@@ -15,7 +15,6 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "mypy", # Installed here but used via pre-commit
-    "pip-tools",
     "pre-commit",
     "pytest",
     "pytest-asyncio",

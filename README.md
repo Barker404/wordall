@@ -25,28 +25,17 @@ pyenv install "$(pyenv version-file-read ./.python-version)"
 ```
 
 ### Set up virtualenv
-Creating an environment using frozen requirements (requirements.txt) is only really
-useful during development or testing when wanting to avoid possible errors due to new
-dependency versions. Otherwise, the package can be installed directly in a fresh
-environment and dependencies will be pulled in automatically.
+The `create_venv.sh` simplifies creating a new pyenv environment called `wordall`. It
+just installs the latest compatible dependencies (no locking) the same as anybody would
+get using `pip install wordall`.
 
-To create an environment without dev dependencies from frozen requirements:
+To create an environment without dev dependencies:
 ```
 ./create_venv.sh
 ```
-To create an environment with dev dependencies from frozen requirements:
+To create an environment with dev dependencies and editable wordall:
 ```
 ./create_venv.sh -d
-```
-
-### Re-compile requirements.txt
-For new dependencies only:
-```
-./pip_compile.sh
-```
-To upgrade all:
-```
-./pip_compile.sh -u
 ```
 
 ### Build package
