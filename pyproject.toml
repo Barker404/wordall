@@ -13,13 +13,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "mypy", # Installed here but used via pre-commit
-    "pre-commit",
+test = [
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
     "pytest-mock",
+]
+dev = [
+    "wordall[test]",
+    "build",
+    "mypy", # Installed here but used via pre-commit
+    "pre-commit",
     "textual-dev",
 ]
 
