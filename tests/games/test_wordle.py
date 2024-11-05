@@ -57,7 +57,9 @@ class TestGameInit:
 
         wordle_game = wordle.WordleGame(pathlib.Path("/a/b/c"), target_word_length=5)
 
-        mock_choice.assert_called_once_with(list({"APPLE", "BREAD", "CHIPS"}))
+        assert len(mock_choice.call_args_list) == 1
+        assert len(mock_choice.call_args_list[0].args) == 1
+        assert set(mock_choice.call_args_list[0].args[0]) == {"APPLE", "BREAD", "CHIPS"}
         assert wordle_game.target == mock_choice.return_value
 
 
