@@ -25,28 +25,17 @@ pyenv install "$(pyenv version-file-read ./.python-version)"
 ```
 
 ### Set up virtualenv
-Creating an environment using frozen requirements (requirements.txt) is only really
-useful during development or testing when wanting to avoid possible errors due to new
-dependency versions. Otherwise, the package can be installed directly in a fresh
-environment and dependencies will be pulled in automatically.
+The `create_venv.sh` simplifies creating a new pyenv environment called `wordall`. It
+just installs the latest compatible dependencies (no locking) the same as anybody would
+get using `pip install wordall`.
 
-To create an environment without dev dependencies from frozen requirements:
+To create an environment without dev dependencies:
 ```
 ./create_venv.sh
 ```
-To create an environment with dev dependencies from frozen requirements:
+To create an environment with dev dependencies and editable wordall:
 ```
 ./create_venv.sh -d
-```
-
-### Re-compile requirements.txt
-For new dependencies only:
-```
-./pip_compile.sh
-```
-To upgrade all:
-```
-./pip_compile.sh -u
 ```
 
 ### Build package
@@ -58,8 +47,9 @@ python -m build
 ### Run tests
 After activating an environment with dev dependencies:
 ```
-pytest --cov-report term-missing --cov=src tests/
+pytest
 ```
+Coverage will be shown in output.
 
 ### Formatting, linting, and type-checking
 Python formatting and linting are done using ruff for python. Shell script formatting
@@ -90,3 +80,23 @@ or
 ```
 mypy --strict .
 ```
+
+### Testing github workflows
+Github workflows can be tested locally with `act` for faster feedback (although there
+may be some differences). Requires docker (https://docs.docker.com/engine/install/).
+
+Install act:
+```
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
+```
+
+Run workflows for push event:
+```
+act push
+```
+Run only one python version:
+```
+act push --matrix python-version:3.12
+```
+
+See also https://nektosact.com/usage/index.html

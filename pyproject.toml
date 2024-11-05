@@ -13,27 +13,39 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "mypy", # Installed here but used via pre-commit
-    "pip-tools",
-    "pre-commit",
+test = [
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
     "pytest-mock",
+]
+dev = [
+    "wordall[test]",
+    "build",
+    "mypy", # Installed here but used via pre-commit
+    "pre-commit",
     "textual-dev",
 ]
 
+[tool.coverage.paths]
+# Mark these paths as equivalent to make the CI report look nicer
+source = ["src", "**/site-packages"]
+
 [tool.coverage.report]
+# Show missing statements in report
+show_missing = true
 exclude_also = [
     "if TYPE_CHECKING:",
 ]
+
 [tool.coverage.run]
 omit = [
-    "src/wordall/run.py",  # Currently nothing to test
+    "*/wordall/run.py",  # Currently nothing to test
 ]
 
 [tool.pytest.ini_options]
+# Always show coverage
+addopts = "--cov=wordall"
 # Use future default value to supress warning
 asyncio_default_fixture_loop_scope = "function"
 

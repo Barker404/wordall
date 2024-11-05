@@ -4,13 +4,13 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-requirements=("${SCRIPT_DIR}/requirements.txt" "${SCRIPT_DIR}")
+opts=("${SCRIPT_DIR}")
 usage="Usage: $0 [-d] [-h]"
 
 while getopts "dh" option; do
     case "${option}" in
     d)
-        requirements=("${SCRIPT_DIR}/requirements-dev.txt" "-e" "${SCRIPT_DIR}")
+        opts=("-e" "${SCRIPT_DIR}[dev]")
         ;;
     h)
         echo "${usage}"
@@ -36,7 +36,7 @@ pyenv virtualenv-delete -f wordall
 pyenv virtualenv wordall
 
 pyenv activate wordall
-pip install -r "${requirements[@]}"
+pip install "${opts[@]}"
 
 echo
 echo 'Activate new virtualenv with:'
