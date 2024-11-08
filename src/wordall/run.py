@@ -1,5 +1,10 @@
 from wordall.tui import app
 
-if __name__ == "__main__":
+
+def main() -> None:
     app_ = app.WordallApp()
     app_.run()
+
+
+if __name__ == "__main__":
+    main()

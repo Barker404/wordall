@@ -28,6 +28,20 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+    - name: Test wordall command exists
+      run: |
+        command -v wordall
+    - name: Test wordall command runs
+      run: |
+        set +e
+        timeout 1 wordall
+        exit_code=$?
+        # Exit code will be 124 if timed out - i.e. didn't fail or exit prematurely
+        if [ "${exit_code}" -ne 124 ]; then
+          echo "Received unexpected exit code ${exit_code} from timeout"
+          exit 1
+        fi
+
 
   lint:
     runs-on: ubuntu-latest

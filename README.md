@@ -8,6 +8,21 @@ with different word lengths, guess numbers, etc.
 The intention of this project is primarily to practice and learn more about python
 packaging and development tools - the wordle game is a fun vehicle for that. The
 text-based user interface is also an interesting new concept for me.
+## Usage
+
+### Install
+From the repo root:
+```
+pip install .
+```
+Package is not yet published to pypi.
+
+### Run
+To run the textual user interface from an environment with the package installed:
+```
+wordall
+```
+Note that game choice and settings are currently hard coded in src/wordall/tui/app.py
 
 ## Development setup
 All examples for ubuntu
