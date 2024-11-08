@@ -46,13 +46,17 @@ def app_with_wordle_game_no_limit(
 
 @pytest.mark.asyncio
 class TestTextEntry:
-    async def test_input_focused_at_start(self) -> None:
-        app = app_module.WordallApp()
+    async def test_input_focused_at_start(
+        self, app_with_wordle_game: app_module.WordallApp
+    ) -> None:
+        app = app_with_wordle_game
         async with app.run_test():
             assert app.query_exactly_one(guess_input_module.GuessInput).has_focus
 
-    async def test_text_entered_shown(self) -> None:
-        app = app_module.WordallApp()
+    async def test_text_entered_shown(
+        self, app_with_wordle_game: app_module.WordallApp
+    ) -> None:
+        app = app_with_wordle_game
         async with app.run_test() as pilot:
             guess_input = app.query_exactly_one(guess_input_module.GuessInput)
             await pilot.press("A")
@@ -60,8 +64,10 @@ class TestTextEntry:
             await pilot.press("B", "C", "D")
             assert guess_input.value == "ABCD"
 
-    async def test_text_entered_uppercased(self) -> None:
-        app = app_module.WordallApp()
+    async def test_text_entered_uppercased(
+        self, app_with_wordle_game: app_module.WordallApp
+    ) -> None:
+        app = app_with_wordle_game
         async with app.run_test() as pilot:
             guess_input = app.query_exactly_one(guess_input_module.GuessInput)
             await pilot.press("a", "b", "c", "d")
@@ -297,8 +303,10 @@ class TestGuessSubmission:
 
 @pytest.mark.asyncio
 class TestNewGame:
-    async def test_ctrl_n_starts_new_game(self) -> None:
-        app = app_module.WordallApp()
+    async def test_ctrl_n_starts_new_game(
+        self, app_with_wordle_game: app_module.WordallApp
+    ) -> None:
+        app = app_with_wordle_game
         old_game = app.game_
 
         async with app.run_test() as pilot:
