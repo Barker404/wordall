@@ -57,7 +57,7 @@ class WordallApp(textual_app.App[None]):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.game_key = "wordle"
+        self.game_key = "numberle"
         self.game_ = self.get_game(self.game_key)
 
     def get_game(self, game_key: str) -> game_module.Game:
