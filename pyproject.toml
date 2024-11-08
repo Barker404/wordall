@@ -27,6 +27,9 @@ dev = [
     "textual-dev",
 ]
 
+[project.scripts]
+wordall = "wordall.run:main"
+
 [tool.coverage.paths]
 # Mark these paths as equivalent to make the CI report look nicer
 source = ["src", "**/site-packages"]
