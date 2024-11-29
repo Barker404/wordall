@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-build-scripts"]
 build-backend = "hatchling.build"
 
 [project]
@@ -45,6 +45,20 @@ exclude_also = [
 omit = [
     "*/wordall/run.py",  # Currently nothing to test
 ]
+
+[tool.hatch.build.targets.wheel]
+artifacts = [
+    "src/wordall/resources/scowl-2020.12.07/",
+]
+
+[[tool.hatch.build.targets.wheel.hooks.build-scripts.scripts]]
+commands = [
+    "./download_scowl.sh",
+]
+# The artifacts options within scripts config is required but doesn't work if the
+# artifact is already in the right place. So we use the separate targets.wheel.artifacts
+# option to pull in the script output files.
+artifacts = []
 
 [tool.pytest.ini_options]
 # Always show coverage
