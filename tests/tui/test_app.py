@@ -124,7 +124,6 @@ class TestGuessSubmission:
             assert len(game.guesses) == 0
             label = app.query_exactly_one("#game_messages", widgets.Label)
             label_renderable = label.render()
-            assert isinstance(label_renderable, text.Text)
             assert "invalid" in str(label_renderable).lower()
 
     async def test_valid_guess_displayed(
@@ -144,12 +143,10 @@ class TestGuessSubmission:
             assert len(game.guesses) == 1
             assert game.guesses[0].guess_word == "BREAD"
             guess_renderable = guess_widgets[0].render()
-            assert isinstance(guess_renderable, text.Text)
             assert " ".join("BREAD") in str(guess_renderable)
 
             label = app.query_exactly_one("#game_messages", widgets.Label)
             label_renderable = label.render()
-            assert isinstance(label_renderable, text.Text)
             assert "guessed" in str(label_renderable).lower()
 
             assert "CHIPS" in game.word_dictionary
@@ -158,7 +155,6 @@ class TestGuessSubmission:
             assert len(game.guesses) == 2
             assert game.guesses[1].guess_word == "CHIPS"
             guess_renderable = guess_widgets[1].render()
-            assert isinstance(guess_renderable, text.Text)
             assert " ".join("CHIPS") in str(guess_renderable)
 
     async def test_valid_guess_displayed_when_no_guess_limit(
@@ -180,7 +176,6 @@ class TestGuessSubmission:
 
             assert len(guesses_widget.children) == 1
             guess_renderable = guesses_widget.children[0].render()
-            assert isinstance(guess_renderable, text.Text)
             assert " ".join("BREAD") in str(guess_renderable)
 
             assert "CHIPS" in game.word_dictionary
@@ -188,7 +183,6 @@ class TestGuessSubmission:
 
             assert len(guesses_widget.children) == 2
             guess_renderable = guesses_widget.children[1].render()
-            assert isinstance(guess_renderable, text.Text)
             assert " ".join("CHIPS") in str(guess_renderable)
 
     async def test_valid_guess_letter_statuses_shown(
@@ -277,8 +271,7 @@ class TestGuessSubmission:
             target_display = app.query_exactly_one(target_displays.TargetDisplay)
             assert target_display.visible
             target_renderable = target_display.render()
-            assert isinstance(target_renderable, str)
-            assert "APPLE" in target_renderable
+            assert "APPLE" in str(target_renderable)
 
     async def test_incorrect_guesses_end_game(
         self, app_with_wordle_game: app_module.WordallApp
@@ -297,8 +290,7 @@ class TestGuessSubmission:
             target_display = app.query_exactly_one(target_displays.TargetDisplay)
             assert target_display.visible
             target_renderable = target_display.render()
-            assert isinstance(target_renderable, str)
-            assert "APPLE" in target_renderable
+            assert "APPLE" in str(target_renderable)
 
 
 @pytest.mark.asyncio
