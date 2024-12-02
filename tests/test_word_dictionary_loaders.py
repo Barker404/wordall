@@ -67,8 +67,23 @@ class TestSimpleFileLoader:
         loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
         word_dictionary = loader.get_word_dictionary()
 
-        open_mock.assert_called_once_with(dictionary_file_path)
+        open_mock.assert_called_once_with(dictionary_file_path, encoding=None)
         assert word_dictionary == set(word_list)
+
+    def test_loads_word_dictionary_with_encoding(
+        self,
+        mocker: pytest_mock.MockerFixture,
+    ) -> None:
+        word_list = ["APPLE", "BREAD", "CHIPS"]
+        open_mock = mock_dictionary_file(mocker, word_list)
+        dictionary_file_path = pathlib.Path("/a/b/c")
+
+        loader = word_dictionary_loaders.SimpleFileLoader(
+            dictionary_file_path, encoding="latin-1"
+        )
+        loader.get_word_dictionary()
+
+        open_mock.assert_called_once_with(dictionary_file_path, encoding="latin-1")
 
     def test_loads_word_dictionary_with_word_length(
         self,
@@ -81,7 +96,7 @@ class TestSimpleFileLoader:
         loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
         word_dictionary = loader.get_word_dictionary(word_length=5)
 
-        open_mock.assert_called_once_with(dictionary_file_path)
+        open_mock.assert_called_once_with(dictionary_file_path, encoding=None)
         assert word_dictionary == {word for word in word_list if len(word) == 5}
 
     def test_skips_empty_lines_in_dictionary(
@@ -95,7 +110,7 @@ class TestSimpleFileLoader:
         loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
         word_dictionary = loader.get_word_dictionary()
 
-        open_mock.assert_called_once_with(dictionary_file_path)
+        open_mock.assert_called_once_with(dictionary_file_path, encoding=None)
         assert word_dictionary == {word for word in word_list if word}
 
     def test_accepts_non_alphabet_words_without_filter(
@@ -109,7 +124,7 @@ class TestSimpleFileLoader:
         loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
         word_dictionary = loader.get_word_dictionary()
 
-        open_mock.assert_called_once_with(dictionary_file_path)
+        open_mock.assert_called_once_with(dictionary_file_path, encoding=None)
         assert word_dictionary == set(word_list)
 
     def test_filters_words(
@@ -126,7 +141,7 @@ class TestSimpleFileLoader:
         loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
         word_dictionary = loader.get_word_dictionary(word_filter_function=letters_only)
 
-        open_mock.assert_called_once_with(dictionary_file_path)
+        open_mock.assert_called_once_with(dictionary_file_path, encoding=None)
         assert word_dictionary == {w for w in word_list if letters_only(w)}
 
     def test_raises_exception_on_empty_dictionary(
@@ -169,12 +184,37 @@ class TestMultipleFileLoader:
 
         open_mock.assert_has_calls(
             [
-                mocker.call(dictionary_file_paths[0]),
-                mocker.call(dictionary_file_paths[1]),
-                mocker.call(dictionary_file_paths[2]),
+                mocker.call(dictionary_file_paths[0], encoding=None),
+                mocker.call(dictionary_file_paths[1], encoding=None),
+                mocker.call(dictionary_file_paths[2], encoding=None),
             ]
         )
         assert word_dictionary == {"APPLE", "BREAD", "CHIPS", "DONUTS", "EGGS", "FLOUR"}
+
+    def test_loads_word_dictionaries_with_encoding(
+        self,
+        mocker: pytest_mock.MockerFixture,
+    ) -> None:
+        word_lists = [["APPLE", "BREAD"], ["CHIPS", "DONUTS"], ["EGGS", "FLOUR"]]
+        open_mock = mock_multiple_dictionary_files(mocker, word_lists)
+        dictionary_file_paths = [
+            pathlib.Path("/a/a"),
+            pathlib.Path("/a/b"),
+            pathlib.Path("/a/c"),
+        ]
+
+        loader = word_dictionary_loaders.MultipleFileLoader(
+            dictionary_file_paths, encoding="latin-1"
+        )
+        loader.get_word_dictionary()
+
+        open_mock.assert_has_calls(
+            [
+                mocker.call(dictionary_file_paths[0], encoding="latin-1"),
+                mocker.call(dictionary_file_paths[1], encoding="latin-1"),
+                mocker.call(dictionary_file_paths[2], encoding="latin-1"),
+            ]
+        )
 
     def test_loads_word_dictionaries_with_word_length(
         self,
@@ -457,3 +497,22 @@ class TestScowlWordListLoader:
         assert base_path_mock.glob.mock_calls == [
             mocker.call(fn.replace("20", "*")) for fn in expected_file_names
         ]
+
+    def test_uses_iso8859_1_by_default(
+        self,
+        mocker: pytest_mock.MockerFixture,
+    ) -> None:
+        base_path_mock = mocker.MagicMock(pathlib.Path)
+        # Expected to glob once for english words and once for british words
+        base_path_mock.glob.side_effect = (
+            [pathlib.Path("/a/english-words.10"), pathlib.Path("/a/english-words.60")],
+            [pathlib.Path("/a/british-words.25")],
+        )
+
+        is_file_mock = mocker.patch("pathlib.Path.is_file")
+        is_file_mock.return_value = True
+
+        loader = word_dictionary_loaders.ScowlWordListLoader(
+            base_path_mock, 100, max_variants=0
+        )
+        assert loader.encoding == "iso8859-1"

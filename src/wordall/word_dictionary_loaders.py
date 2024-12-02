@@ -31,8 +31,11 @@ class SimpleFileLoader(WordDictionaryLoader):
     expected to be one per line.
     """
 
-    def __init__(self, dictionary_file_path: pathlib.Path) -> None:
+    def __init__(
+        self, dictionary_file_path: pathlib.Path, encoding: str | None = None
+    ) -> None:
         self.dictionary_file_path = dictionary_file_path
+        self.encoding = encoding
 
     def get_word_dictionary(
         self,
@@ -43,6 +46,7 @@ class SimpleFileLoader(WordDictionaryLoader):
             self.dictionary_file_path,
             word_length=word_length,
             word_filter_function=word_filter_function,
+            encoding=self.encoding,
         )
 
         if not word_dictionary:
@@ -57,8 +61,11 @@ class MultipleFileLoader(WordDictionaryLoader):
     file are expected to be one per line.
     """
 
-    def __init__(self, dictionary_file_paths: list[pathlib.Path]) -> None:
+    def __init__(
+        self, dictionary_file_paths: list[pathlib.Path], encoding: str | None = None
+    ) -> None:
         self.dictionary_file_paths = dictionary_file_paths
+        self.encoding = encoding
 
     def get_word_dictionary(
         self,
@@ -74,6 +81,7 @@ class MultipleFileLoader(WordDictionaryLoader):
                         dictionary_file_path,
                         word_length=word_length,
                         word_filter_function=word_filter_function,
+                        encoding=self.encoding,
                     )
                     for dictionary_file_path in self.dictionary_file_paths
                 )
@@ -109,13 +117,14 @@ class ScowlWordListLoader(MultipleFileLoader):
     MAX_POSSIBLE_VARIANT = 3
     MAX_POSSIBLE_SIZE = 100
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         scowl_final_directory_path: pathlib.Path,
         max_size: int,
         language_category: ScowlLanguageCategory = ScowlLanguageCategory.BRITISH,
         max_variants: int = 1,
         included_subcategories: list[ScowlWordSubcategory] | None = None,
+        encoding: str | None = "iso8859-1",  # Encoding used by SCOWL
     ) -> None:
         if not 0 < max_size <= self.MAX_POSSIBLE_SIZE:
             raise ValueError(f"Max size must be between 1 and {self.MAX_POSSIBLE_SIZE}")
@@ -145,7 +154,7 @@ class ScowlWordListLoader(MultipleFileLoader):
                         )
                     )
 
-        super().__init__(dictionary_file_paths)
+        super().__init__(dictionary_file_paths, encoding=encoding)
 
     @classmethod
     def _get_category_name(
@@ -193,8 +202,9 @@ def _read_word_dictionary_file(
     dictionary_file_path: pathlib.Path,
     word_length: int | None = None,
     word_filter_function: collections_abc.Callable[[str], bool] = lambda _: True,
+    encoding: str | None = None,
 ) -> set[str]:
-    with dictionary_file_path.open() as dictionary_file:
+    with dictionary_file_path.open(encoding=encoding) as dictionary_file:
         all_words = [line_ for line in dictionary_file if (line_ := line.strip())]
 
     return {
