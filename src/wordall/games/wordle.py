@@ -19,7 +19,8 @@ class WordleGame(game.SingleWordleLikeBaseGame):
         super().__init__(guess_limit)
 
         self.word_dictionary = word_dictionary_loader.get_word_dictionary(
-            word_length=target_word_length, word_validator=self.is_word_in_alphabet
+            word_length=target_word_length,
+            word_filter_function=self.is_word_in_alphabet,
         )
         self.target = self._select_target()
         assert len(self.target) == target_word_length
