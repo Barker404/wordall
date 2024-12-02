@@ -1,4 +1,3 @@
-import pathlib
 from typing import cast
 from unittest import mock
 
@@ -19,11 +18,13 @@ from wordall.tui import guess_input as guess_input_module
 @pytest.fixture
 def app_with_wordle_game(
     mocker: pytest_mock.MockerFixture,
-    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
+    mock_valid_dictionary_word_loader_5_letter: mock.MagicMock,
 ) -> app_module.WordallApp:
     def get_game(self: app_module.WordallApp, game_key: str) -> wordle.WordleGame:  # noqa: ARG001
         return wordle.WordleGame(
-            pathlib.Path("/a/b/c"), guess_limit=5, target_word_length=5
+            mock_valid_dictionary_word_loader_5_letter,
+            guess_limit=5,
+            target_word_length=5,
         )
 
     mocker.patch("wordall.tui.app.WordallApp.get_game", get_game)
@@ -33,11 +34,13 @@ def app_with_wordle_game(
 @pytest.fixture
 def app_with_wordle_game_no_limit(
     mocker: pytest_mock.MockerFixture,
-    mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],  # noqa: ARG001
+    mock_valid_dictionary_word_loader_5_letter: mock.MagicMock,
 ) -> app_module.WordallApp:
     def get_game(self: app_module.WordallApp, game_key: str) -> wordle.WordleGame:  # noqa: ARG001
         return wordle.WordleGame(
-            pathlib.Path("/a/b/c"), guess_limit=None, target_word_length=5
+            mock_valid_dictionary_word_loader_5_letter,
+            guess_limit=None,
+            target_word_length=5,
         )
 
     mocker.patch("wordall.tui.app.WordallApp.get_game", get_game)

@@ -7,6 +7,7 @@ from textual import app as textual_app
 from textual import binding, containers, reactive, validation, widgets
 
 from wordall import game as game_module
+from wordall import word_dictionary_loaders
 from wordall.games import numberle, wordle
 from wordall.tui import (
     alphabet_displays,
@@ -65,7 +66,9 @@ class WordallApp(textual_app.App[None]):
         # class from registry
         if game_key == "wordle":
             return wordle.WordleGame(
-                pathlib.Path("dict_long.txt"), guess_limit=5, target_word_length=4
+                word_dictionary_loaders.SimpleFileLoader(pathlib.Path("dict_long.txt")),
+                guess_limit=5,
+                target_word_length=4,
             )
         elif game_key == "numberle":
             return numberle.NumberleGame(guess_limit=5, target_word_length=5)
