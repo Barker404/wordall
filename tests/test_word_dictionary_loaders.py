@@ -85,20 +85,6 @@ class TestSimpleFileLoader:
 
         open_mock.assert_called_once_with(dictionary_file_path, encoding="latin-1")
 
-    def test_loads_word_dictionary_with_word_length(
-        self,
-        mocker: pytest_mock.MockerFixture,
-    ) -> None:
-        word_list = ["APPLE", "BREAD", "CHIPS", "DONUTS", "EGGS"]
-        open_mock = mock_dictionary_file(mocker, word_list)
-        dictionary_file_path = pathlib.Path("/a/b/c")
-
-        loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
-        word_dictionary = loader.get_word_dictionary(word_length=5)
-
-        open_mock.assert_called_once_with(dictionary_file_path, encoding=None)
-        assert word_dictionary == {word for word in word_list if len(word) == 5}
-
     def test_skips_empty_lines_in_dictionary(
         self,
         mocker: pytest_mock.MockerFixture,
@@ -245,23 +231,6 @@ class TestMultipleFileLoader:
                 mocker.call(dictionary_file_paths[2], encoding="latin-1"),
             ]
         )
-
-    def test_loads_word_dictionaries_with_word_length(
-        self,
-        mocker: pytest_mock.MockerFixture,
-    ) -> None:
-        word_lists = [["APPLE", "BREAD"], ["CHIPS", "DONUTS"], ["EGGS", "FLOUR"]]
-        mock_multiple_dictionary_files(mocker, word_lists)
-        dictionary_file_paths = [
-            pathlib.Path("/a/a"),
-            pathlib.Path("/a/b"),
-            pathlib.Path("/a/c"),
-        ]
-
-        loader = word_dictionary_loaders.MultipleFileLoader(dictionary_file_paths)
-        word_dictionary = loader.get_word_dictionary(word_length=5)
-
-        assert word_dictionary == {"APPLE", "BREAD", "CHIPS", "FLOUR"}
 
     def test_skips_empty_lines_in_dictionaries(
         self,

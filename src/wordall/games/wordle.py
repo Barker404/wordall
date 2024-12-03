@@ -18,10 +18,12 @@ class WordleGame(game.SingleWordleLikeBaseGame):
     ) -> None:
         super().__init__(guess_limit)
 
+        def word_filter_function(word: str) -> bool:
+            return self.is_word_in_alphabet(word) and len(word) == target_word_length
+
         self.word_dictionary = word_dictionary_loader.get_word_dictionary(
-            word_length=target_word_length,
             word_transform_function=str.upper,
-            word_filter_function=self.is_word_in_alphabet,
+            word_filter_function=word_filter_function,
         )
         self.target = self._select_target()
         assert len(self.target) == target_word_length

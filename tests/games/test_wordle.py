@@ -13,9 +13,8 @@ class TestGameInit:
         wordle_game = wordle.WordleGame(loader_mock, target_word_length=5)
 
         loader_mock.get_word_dictionary.assert_called_once_with(
-            word_length=5,
             word_transform_function=str.upper,
-            word_filter_function=wordle_game.is_word_in_alphabet,
+            word_filter_function=mock.ANY,
         )
         assert (
             wordle_game.word_dictionary == loader_mock.get_word_dictionary.return_value

@@ -13,13 +13,11 @@ class WordDictionaryLoader(abc.ABC):
     @abc.abstractmethod
     def get_word_dictionary(
         self,
-        word_length: int | None = None,
         word_transform_function: collections_abc.Callable[[str], str] = lambda w: w,
         word_filter_function: collections_abc.Callable[[str], bool] = lambda _: True,
     ) -> set[str]:
         """
-        Returns the word dictionary. If word_length is supplied, limits loaded words to
-        those with exactly that length. If word_transform_function is supplied, applies
+        Returns the word dictionary. If word_transform_function is supplied, applies
         the function to all words before filtering and returning. If
         word_filter_function is supplied, only words which it returns true for are kept.
         Raises NoWordsFoundError if no words would be returned.
@@ -41,13 +39,11 @@ class SimpleFileLoader(WordDictionaryLoader):
 
     def get_word_dictionary(
         self,
-        word_length: int | None = None,
         word_transform_function: collections_abc.Callable[[str], str] = lambda w: w,
         word_filter_function: collections_abc.Callable[[str], bool] = lambda _: True,
     ) -> set[str]:
         word_dictionary = _read_word_dictionary_file(
             self.dictionary_file_path,
-            word_length=word_length,
             word_filter_function=word_filter_function,
             word_transform_function=word_transform_function,
             encoding=self.encoding,
@@ -73,7 +69,6 @@ class MultipleFileLoader(WordDictionaryLoader):
 
     def get_word_dictionary(
         self,
-        word_length: int | None = None,
         word_transform_function: collections_abc.Callable[[str], str] = lambda w: w,
         word_filter_function: collections_abc.Callable[[str], bool] = lambda _: True,
     ) -> set[str]:
@@ -84,7 +79,6 @@ class MultipleFileLoader(WordDictionaryLoader):
                 *(
                     _read_word_dictionary_file(
                         dictionary_file_path,
-                        word_length=word_length,
                         word_filter_function=word_filter_function,
                         word_transform_function=word_transform_function,
                         encoding=self.encoding,
@@ -206,7 +200,6 @@ class NoWordsFoundError(Exception):
 
 def _read_word_dictionary_file(
     dictionary_file_path: pathlib.Path,
-    word_length: int | None = None,
     word_transform_function: collections_abc.Callable[[str], str] = lambda w: w,
     word_filter_function: collections_abc.Callable[[str], bool] = lambda _: True,
     encoding: str | None = None,
@@ -218,9 +211,4 @@ def _read_word_dictionary_file(
             if (line_ := line.strip())
         ]
 
-    return {
-        word
-        for word in all_words
-        if (word_length is None or len(word) == word_length)
-        and word_filter_function(word)
-    }
+    return {word for word in all_words if word_filter_function(word)}
