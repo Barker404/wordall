@@ -39,6 +39,7 @@ source = ["src", "**/site-packages"]
 show_missing = true
 exclude_also = [
     "if TYPE_CHECKING:",
+    "raise NotImplementedError",
 ]
 
 [tool.coverage.run]

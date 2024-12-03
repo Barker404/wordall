@@ -1,7 +1,5 @@
-import pathlib
 from unittest import mock
 
-import pytest
 import pytest_mock
 
 from wordall.games import wordle
@@ -9,53 +7,30 @@ from wordall.games import wordle
 
 class TestGameInit:
     def test_loads_word_dictionary(
-        self,
-        mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
+        self, mock_valid_dictionary_word_loader_5_letter: mock.MagicMock
     ) -> None:
-        open_mock, _ = mock_valid_dictionary_file
-        dictionary_file_path = pathlib.Path("/a/b/c")
+        loader_mock = mock_valid_dictionary_word_loader_5_letter
+        wordle_game = wordle.WordleGame(loader_mock, target_word_length=5)
 
-        wordle_game = wordle.WordleGame(dictionary_file_path, target_word_length=5)
-
-        open_mock.assert_called_once_with(dictionary_file_path)
-        assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
-
-    def test_skips_empty_lines_in_dictionary(
-        self,
-        mock_valid_empty_line_dictionary_file: tuple[mock.MagicMock, list[str]],
-    ) -> None:
-        open_mock, _ = mock_valid_empty_line_dictionary_file
-        dictionary_file_path = pathlib.Path("/a/b/c")
-
-        wordle_game = wordle.WordleGame(dictionary_file_path, target_word_length=5)
-
-        open_mock.assert_called_once_with(dictionary_file_path)
-        assert wordle_game.word_dictionary == {"APPLE", "BREAD", "CHIPS"}
-
-    def test_raises_exception_on_non_alphabet_dictionary_word(
-        self,
-        mock_invalid_character_dictionary_file: tuple[mock.MagicMock, list[str]],
-    ) -> None:
-        with pytest.raises(wordle.InvalidDictionaryFileError):
-            wordle.WordleGame(pathlib.Path("/a/b/c"))
-
-    def test_raises_exception_on_empty_dictionary(
-        self,
-        mock_empty_dictionary_file: tuple[mock.MagicMock, list[str]],
-    ) -> None:
-        with pytest.raises(wordle.InvalidDictionaryFileError):
-            wordle.WordleGame(pathlib.Path("/a/b/c"))
+        loader_mock.get_word_dictionary.assert_called_once_with(
+            word_transform_function=str.upper,
+            word_filter_function=mock.ANY,
+        )
+        assert (
+            wordle_game.word_dictionary == loader_mock.get_word_dictionary.return_value
+        )
 
     def test_selects_random_target(
         self,
         mocker: pytest_mock.MockerFixture,
-        mock_valid_dictionary_file: tuple[mock.MagicMock, list[str]],
+        mock_valid_dictionary_word_loader_5_letter: mock.MagicMock,
     ) -> None:
-        _, file_word_list = mock_valid_dictionary_file
-
         mock_choice = mocker.patch("random.choice")
+        mock_choice.return_value = "APPLE"
 
-        wordle_game = wordle.WordleGame(pathlib.Path("/a/b/c"), target_word_length=5)
+        wordle_game = wordle.WordleGame(
+            mock_valid_dictionary_word_loader_5_letter, target_word_length=5
+        )
 
         assert len(mock_choice.call_args_list) == 1
         assert len(mock_choice.call_args_list[0].args) == 1

@@ -1,12 +1,8 @@
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import pathlib
-
-from wordall import game
+from wordall import game, word_dictionary_loaders
 
 
 class WordleGame(game.SingleWordleLikeBaseGame):
@@ -16,44 +12,21 @@ class WordleGame(game.SingleWordleLikeBaseGame):
 
     def __init__(
         self,
-        dictionary_file_path: pathlib.Path,
+        word_dictionary_loader: word_dictionary_loaders.WordDictionaryLoader,
         guess_limit: int | None = None,
         target_word_length: int = 5,
     ) -> None:
         super().__init__(guess_limit)
 
-        self.word_dictionary = self._load_word_dictionary(
-            dictionary_file_path, word_length=target_word_length
+        def word_filter_function(word: str) -> bool:
+            return self.is_word_in_alphabet(word) and len(word) == target_word_length
+
+        self.word_dictionary = word_dictionary_loader.get_word_dictionary(
+            word_transform_function=str.upper,
+            word_filter_function=word_filter_function,
         )
         self.target = self._select_target()
-
-    def _load_word_dictionary(
-        self, dictionary_file_path: pathlib.Path, word_length: int | None = None
-    ) -> set[str]:
-        """
-        Loads the dictionary of words from the given file. The words in the file should
-        be one per line. Raises InvalidDictionaryFileError if any word does not match
-        the alphabet.
-        If word_length is provided, only loads words of that length. This allows
-        limiting number of words needed in memory for game where word length is known
-        ahead of time.
-        """
-        with dictionary_file_path.open() as dictionary_file:
-            all_words = [line_ for line in dictionary_file if (line_ := line.strip())]
-            dictionary = {
-                word
-                for word in all_words
-                if word_length is None or len(word) == word_length
-            }
-
-        if not dictionary:
-            raise InvalidDictionaryFileError("Empty dictionary file")
-
-        invalid = [w for w in dictionary if not self.is_word_in_alphabet(w)]
-        if invalid:
-            raise InvalidDictionaryFileError(f"Invalid words: {invalid}")
-
-        return dictionary
+        assert len(self.target) == target_word_length
 
     def _select_target(self) -> str:
         """
@@ -64,7 +37,3 @@ class WordleGame(game.SingleWordleLikeBaseGame):
 
     def is_valid_word(self, word: str) -> bool:
         return word in self.word_dictionary and len(word) == len(self.target)
-
-
-class InvalidDictionaryFileError(Exception):
-    pass

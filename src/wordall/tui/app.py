@@ -7,6 +7,7 @@ from textual import app as textual_app
 from textual import binding, containers, reactive, validation, widgets
 
 from wordall import game as game_module
+from wordall import word_dictionary_loaders
 from wordall.games import numberle, wordle
 from wordall.tui import (
     alphabet_displays,
@@ -57,15 +58,24 @@ class WordallApp(textual_app.App[None]):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.game_key = "numberle"
+        self.game_key = "wordle"
         self.game_ = self.get_game(self.game_key)
 
     def get_game(self, game_key: str) -> game_module.Game:
         # TODO: Obviously still needs work to load args/kwargs properly and use game
         # class from registry
         if game_key == "wordle":
+            scowl_path = (
+                pathlib.Path(__file__).parent.parent
+                / "resources/scowl-2020.12.07/final"
+            ).resolve()
             return wordle.WordleGame(
-                pathlib.Path("dict_long.txt"), guess_limit=5, target_word_length=4
+                word_dictionary_loaders.ScowlWordListLoader(
+                    scowl_path,
+                    70,
+                ),
+                guess_limit=6,
+                target_word_length=5,
             )
         elif game_key == "numberle":
             return numberle.NumberleGame(guess_limit=5, target_word_length=5)
