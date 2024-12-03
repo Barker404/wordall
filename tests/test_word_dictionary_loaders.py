@@ -127,12 +127,25 @@ class TestSimpleFileLoader:
         open_mock.assert_called_once_with(dictionary_file_path, encoding=None)
         assert word_dictionary == set(word_list)
 
+    def test_transforms_words(
+        self,
+        mocker: pytest_mock.MockerFixture,
+    ) -> None:
+        word_list = ["apple", "bread", "chips"]
+        mock_dictionary_file(mocker, word_list)
+        dictionary_file_path = pathlib.Path("/a/b/c")
+
+        loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
+        word_dictionary = loader.get_word_dictionary(word_transform_function=str.upper)
+
+        assert word_dictionary == {"APPLE", "BREAD", "CHIPS"}
+
     def test_filters_words(
         self,
         mocker: pytest_mock.MockerFixture,
     ) -> None:
         word_list = ["APPLE", "BREA8", "CHIPS", "D*NUT$"]
-        open_mock = mock_dictionary_file(mocker, word_list)
+        mock_dictionary_file(mocker, word_list)
         dictionary_file_path = pathlib.Path("/a/b/c")
 
         def letters_only(word: str) -> bool:
@@ -141,8 +154,25 @@ class TestSimpleFileLoader:
         loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
         word_dictionary = loader.get_word_dictionary(word_filter_function=letters_only)
 
-        open_mock.assert_called_once_with(dictionary_file_path, encoding=None)
-        assert word_dictionary == {w for w in word_list if letters_only(w)}
+        assert word_dictionary == {"APPLE", "CHIPS"}
+
+    def test_transforms_before_filtering(
+        self,
+        mocker: pytest_mock.MockerFixture,
+    ) -> None:
+        word_list = ["apple", "bread", "chip!"]
+        mock_dictionary_file(mocker, word_list)
+        dictionary_file_path = pathlib.Path("/a/b/c")
+
+        def upper_letters_only(word: str) -> bool:
+            return all(c in string.ascii_uppercase for c in word)
+
+        loader = word_dictionary_loaders.SimpleFileLoader(dictionary_file_path)
+        word_dictionary = loader.get_word_dictionary(
+            word_transform_function=str.upper, word_filter_function=upper_letters_only
+        )
+
+        assert word_dictionary == {"APPLE", "BREAD"}
 
     def test_raises_exception_on_empty_dictionary(
         self,
@@ -271,6 +301,23 @@ class TestMultipleFileLoader:
 
         assert word_dictionary == {"APPLE", "BREA8", "CHIPS", "DONUT$", "EGGS", "F-_=R"}
 
+    def test_transforms_words(
+        self,
+        mocker: pytest_mock.MockerFixture,
+    ) -> None:
+        word_lists = [["apple", "bread"], ["chips", "donuts"], ["eggs", "flour"]]
+        mock_multiple_dictionary_files(mocker, word_lists)
+        dictionary_file_paths = [
+            pathlib.Path("/a/a"),
+            pathlib.Path("/a/b"),
+            pathlib.Path("/a/c"),
+        ]
+
+        loader = word_dictionary_loaders.MultipleFileLoader(dictionary_file_paths)
+        word_dictionary = loader.get_word_dictionary(word_transform_function=str.upper)
+
+        assert word_dictionary == {"APPLE", "BREAD", "CHIPS", "DONUTS", "EGGS", "FLOUR"}
+
     def test_filters_words(
         self,
         mocker: pytest_mock.MockerFixture,
@@ -288,6 +335,28 @@ class TestMultipleFileLoader:
 
         loader = word_dictionary_loaders.MultipleFileLoader(dictionary_file_paths)
         word_dictionary = loader.get_word_dictionary(word_filter_function=letters_only)
+
+        assert word_dictionary == {"APPLE", "CHIPS", "EGGS"}
+
+    def test_transforms_before_filtering(
+        self,
+        mocker: pytest_mock.MockerFixture,
+    ) -> None:
+        word_lists = [["apple", "brea8"], ["chips", "donut$"], ["eggs", "f-_=r"]]
+        mock_multiple_dictionary_files(mocker, word_lists)
+        dictionary_file_paths = [
+            pathlib.Path("/a/a"),
+            pathlib.Path("/a/b"),
+            pathlib.Path("/a/c"),
+        ]
+
+        def upper_letters_only(word: str) -> bool:
+            return all(c in string.ascii_uppercase for c in word)
+
+        loader = word_dictionary_loaders.MultipleFileLoader(dictionary_file_paths)
+        word_dictionary = loader.get_word_dictionary(
+            word_transform_function=str.upper, word_filter_function=upper_letters_only
+        )
 
         assert word_dictionary == {"APPLE", "CHIPS", "EGGS"}
 

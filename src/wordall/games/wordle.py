@@ -20,6 +20,7 @@ class WordleGame(game.SingleWordleLikeBaseGame):
 
         self.word_dictionary = word_dictionary_loader.get_word_dictionary(
             word_length=target_word_length,
+            word_transform_function=str.upper,
             word_filter_function=self.is_word_in_alphabet,
         )
         self.target = self._select_target()
